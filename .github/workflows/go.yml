@@ -1,59 +1,48 @@
 name: CI/CD Pipeline
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
-    types:
-      - opened
-      - synchronize
+      - dev # Trigger on commits to the dev branch
 
 jobs:
+  # This job creates a PR from dev to main whenever a commit is pushed to dev branch
   create-pr:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.head.ref == 'dev' && github.event.pull_request.base.ref == 'main'
     steps:
-      - name: Create PR
+      - name: Open PR
+        id: open_pr
         uses: rematocorp/open-pull-request-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          from-branch: ${{ github.event.pull_request.head.ref }}
-          to-branch: ${{ github.event.pull_request.base.ref }}
-          title: "Automated PR from ${{ github.event.pull_request.head.ref }} to ${{ github.event.pull_request.base.ref }}"
-          body: "This PR was created automatically by the CI/CD pipeline."
+          from-branch: change_this
+          to-branch: change_this
+          repository-owner: change_this
+          repository: change_this
 
-  pipeline:
-    runs-on: ubuntu-latest
-    needs: create-pr
-    if: github.event.pull_request.state == 'approved'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run tests
-        run: go test -v ./...
-
-      - name: Build and push Docker image
-        run: |
-          docker build -t manisankardivi/new:${{ env.VERSION }} .
-          docker push manisankardivi/new:${{ env.VERSION }}
-
+      - name: Echo mergeable PR number
+        run: echo ${{ steps.open_pr.outputs.pull_number }}
+        
+  # This job waits for the PR to be merged and then continues
   check-pr-merged:
     runs-on: ubuntu-latest
+    needs: create-pr
     steps:
       - name: Check if pull request was merged
         run: |
+          # Wait for PR to be merged
           if [[ "${{ github.event.pull_request.merged }}" == 'true' ]]; then
             echo "PR was merged, proceeding with the pipeline."
           else
             echo "PR was not merged, skipping pipeline."
-            exit 0  # Exit if not merged
+            exit 0  # Exit if PR not merged
           fi
 
-  test:
+  # This job runs the test and build steps after PR merge
+  pipeline:
     runs-on: ubuntu-latest
     needs: check-pr-merged
-    if: success()
+    if: success() # Only runs if the previous job (check-pr-merged) was successful
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -65,40 +54,16 @@ jobs:
 
       - name: Install dependencies
         run: |
-          go mod tidy
+          go mod tidy  # Ensure the go.mod and go.sum files are up-to-date
           go get -v ./...
 
-      - name: Install the application
-        run: go install ./...
-
       - name: Run tests
-        run: go test -v ./... || exit 1
+        run: go test -v ./... || exit 1 # Fail the job if tests fail
 
-  build:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Build the application
-        run: go build -v -o dist/main ./...
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: go-build-artifact
-          path: dist/main
-          if-no-files-found: warn
-
-      - name: Checking artifact
-        run: |
-          ls -la
-          tree dist
-
+  # This job builds and pushes the Docker image after the PR is merged
   docker_build_push:
     runs-on: ubuntu-latest
-    needs: build
+    needs: pipeline
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -128,6 +93,7 @@ jobs:
           docker build -t manisankardivi/new:${{ env.VERSION }} .
           docker push manisankardivi/new:${{ env.VERSION }}
 
+  # This job updates the Kubernetes manifest with the new image version
   k8s-manifest-files_update:
     runs-on: ubuntu-latest
     needs: docker_build_push
@@ -166,4 +132,3 @@ jobs:
             echo "Version Updated"
             git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
             git push origin main
-          fi
