@@ -109,19 +109,3 @@ jobs:
             git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
             git push origin main
           fi
-
-  notify:
-    runs-on: ubuntu-latest
-    needs: [test, build, docker_build_push, k8s-manifest-files_update]
-    steps:
-      - name: Notify on success
-        if: success()
-        run: |
-          echo "All jobs completed successfully!"
-          # You can integrate with Slack, email, or other notification systems here.
-
-      - name: Notify on failure
-        if: failure()
-        run: |
-          echo "One or more jobs failed!"
-          # You can integrate with Slack, email, or other notification systems here.
