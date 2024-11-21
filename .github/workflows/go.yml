@@ -76,10 +76,12 @@ jobs:
           else
             echo "VERSION file not found!"
             exit 1
+          fi
 
       - name: Build and push Docker image
         run: |
           docker build -t manisankardivi/new:${{ env.VERSION }} .
+
           docker push manisankardivi/new:${{ env.VERSION }}
 
   k8s-manifest-files_update:
