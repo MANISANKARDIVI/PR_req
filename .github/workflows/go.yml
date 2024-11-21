@@ -1,14 +1,26 @@
 name: CI Pipeline
-
 on:
-  push:
-    branches: ["main", "dev"]
   pull_request:
-    branches: ["main", "dev"]
+    branches:
+      - main # Listen for pull requests targeting the 'main' branch
+    types:
+      - closed # Trigger only when the PR is closed (merged or rejected)
 
 jobs:
+  check-pr-merged:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if pull request was merged
+        run: |
+          if [[ ${{ github.event.pull_request.merged }} == 'true' ]]; then
+            echo "PR was merged, proceeding with the pipeline."
+          else
+            echo "PR was not merged, skipping pipeline."
+            exit 0  # Exit if not merged
+
   test:
     runs-on: ubuntu-latest
+    needs: check-pr-merged
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -20,16 +32,17 @@ jobs:
 
       - name: Install dependencies
         run: |
-          go mod tidy
+          go mod tidy  # Ensure the go.mod and go.sum files are up-to-date
           go get -v ./...
+      - name: Install the application
+        run: go install ./...
 
       - name: Run tests
-        run: go test -v ./...
-        continue-on-error: false # Fail the job if tests fail
+        run: go test -v ./... || exit 1 # Fail the job if tests fail
 
   build:
     runs-on: ubuntu-latest
-    needs: test
+    needs: test # Build job only runs after tests pass
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,9 +57,14 @@ jobs:
           path: dist/main
           if-no-files-found: warn
 
+      - name: Checking artifact
+        run: |
+          ls -la
+          tree dist
+
   docker_build_push:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build # Docker build & push only runs after build succeeds
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -86,28 +104,30 @@ jobs:
       - name: Read version from VERSION file
         run: |
           VERSION=$(cat VERSION)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Version extracted: $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV  # Save version to environment variable
 
       - name: Checkout Kubernetes repo
         run: |
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
           cd k8s_repo
-          sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
-          echo "Image Section:"
-          grep "image: manisankardivi/new:" manifest.yaml
 
-      - name: Check for changes and commit if updated
+          # Make sure we're on the correct branch
+          git checkout main
+
+          # Replace the image version in manifest.yaml
+          sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
+
+      - name: Commit and push Kubernetes manifest updates
         run: |
           cd k8s_repo
-          git config --global user.email "manisankar.divi@gmail.com"
-          git config --global user.name "MANISANKARDIVI"
+          git config --global user.email "manisankardivi@gmail.com"
+          git config --global user.name "manisankardivi"
           git add manifest.yaml
+
           if git diff --cached --exit-code --quiet; then
-            echo "Version Not Updated"
+            echo "Version Not Updated"  # No changes to commit
           else
             echo "Version Updated"
             git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
             git push origin main
-          fi
-
-# CI Pipeline
