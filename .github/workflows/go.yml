@@ -2,10 +2,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
-
+    branches: ["main"]
 
 jobs:
   test:
@@ -17,7 +16,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23.2'
+          go-version: "1.23.2"
 
       - name: Install dependencies
         run: |
@@ -27,12 +26,12 @@ jobs:
         run: go install ./...
 
       - name: Run tests
-        run: go test -v ./... || exit 1  # Fail the job if tests fail
+        run: go test -v ./... || exit 1 # Fail the job if tests fail
 
   # Build the application and upload artifact
   build:
     runs-on: ubuntu-latest
-    needs: test  # Build job only runs after tests pass
+    needs: test # Build job only runs after tests pass
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -55,7 +54,7 @@ jobs:
   # Docker build, push to registry.
   docker_build_push:
     runs-on: ubuntu-latest
-    needs: build  # Docker build & push only runs after build succeeds
+    needs: build # Docker build & push only runs after build succeeds
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -87,7 +86,7 @@ jobs:
   # Update Kubernetes manifest file with the new image version
   k8s-manifest-files_update:
     runs-on: ubuntu-latest
-    needs: docker_build_push  # Manifest update only runs after Docker image is pushed
+    needs: docker_build_push # Manifest update only runs after Docker image is pushed
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -98,38 +97,38 @@ jobs:
           VERSION=$(cat VERSION)
           echo "Version extracted: $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV  # Save version to environment variable
-  
+
       - name: Checkout Kubernetes repo
         run: |
           # Clone the k8s-repo repository
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/manisankar-divi/k8s-repo.git
           cd k8s-repo
-          
+
           # Replace the image version in manifest.yaml with the extracted version
           sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
-          
+
           # Display the image section (line containing image: manisankardivi/new:)
           echo "Image Section:"
           grep "image: manisankardivi/new:" manifest.yaml
-          
+
           # Ensure we are in the correct directory
           echo "Current working directory: $(pwd)"
-          
+
           # Check for any changes in the file and commit if there are updates
           git status
           git diff
-  
+
       - name: Check for changes and commit if updated
         run: |
           cd k8s-repo
-          
+
           # Configure Git with user info
-          git config --global user.email "manisankar-divi@gmail.com"
-          git config --global user.name "manisankar-divi"
-          
+          git config --global user.email "manisankar.divi@gmail.com"
+          git config --global user.name "manisankar.divi"
+
           # Stage the changes to manifest.yaml explicitly
           git add manifest.yaml
-          
+
           # Check if there are any changes in the manifest file
           if git diff --cached --exit-code --quiet; then
             echo "Version Not Updated"  # No changes to commit, version is still the same
