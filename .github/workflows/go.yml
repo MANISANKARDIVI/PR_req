@@ -120,7 +120,7 @@ jobs:
 
       - name: Check for changes and commit if updated
         run: |
-          cd k8s-repo
+          cd k8s_repo
 
           # Configure Git with user info
           git config --global user.email "manisankardivi@gmail.com"
