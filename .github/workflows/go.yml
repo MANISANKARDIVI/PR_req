@@ -1,64 +1,58 @@
+---
 name: CI Pipeline
-
 on:
   push:
-    branches: ["main", "dev"]
+    branches:
+      - main
+      - dev
   pull_request:
-    branches: ["main", "dev"]
-
+    branches:
+      - main
+      - dev
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.23.2"
-
+          go-version: 1.23.2
       - name: Install dependencies
         run: |
           go mod tidy
           go get -v ./...
       - name: Run tests
         run: go test -v ./...
-        continue-on-error: false # Fail the job if tests fail
-
+        continue-on-error: false
   build:
     runs-on: ubuntu-latest
     needs: test
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Build the application
         run: go build -v -o dist/main ./...
-
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: go-build-artifact
           path: dist/main
           if-no-files-found: warn
-
   docker_build_push:
     runs-on: ubuntu-latest
     needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
       - name: Docker login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Read version from VERSION file
         id: read_version
         run: |
@@ -79,24 +73,32 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Read version from VERSION file
         run: |
           VERSION=$(cat VERSION)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
       - name: Checkout Kubernetes repo
-        run: |
-          git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
+        run: >
+          git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN
+          }}@github.com/MANISANKARDIVI/k8s_repo.git
+
           cd k8s_repo
+
           sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
+
           echo "Image Section:"
+
           grep "image: manisankardivi/new:" manifest.yaml
       - name: Check for changes and commit if updated
-        run: |
+        run: >
           cd k8s_repo
+
           git config --global user.email "manisankar.divi@gmail.com"
+
           git config --global user.name "MANISANKARDIVI"
+
           git add manifest.yaml
+
           if git diff --cached --exit-code --quiet; then
             echo "Version Not Updated"
           else
@@ -105,26 +107,58 @@ jobs:
             git push origin main
           fi
 
-      - name: Debug Repository
-        run: |
-          pwd
-          ls -al
-          git status || echo "Not a git repository"
+  open_pr_feature_to_dev:
+  runs-on: ubuntu-latest
+  needs: k8s-manifest-files_update
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Fetch all branches
+      run: git fetch --all
+    - name: List feature branches
+      id: find_feature_branches
+      run: >
+        git branch -r | grep "origin/feature" | sed 's|origin/||' >
+        feature_branches.txt
 
-      - name: Create PR from dev to main
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          branch: dev
-          base: main
-          title: "Merge dev to main"
-          body: "Automated PR to merge dev into main."
+        if [ -s feature_branches.txt ]; then
+          echo "Found feature branches:"
+          cat feature_branches.txt
+        else
+          echo "No feature branches found."
+          exit 0
+        fi
+    - name: Create PRs for feature branches to dev
+      if: steps.find_feature_branches.outcome == 'success'
+      env:
+        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      run: >
+        while read -r branch; do
+          echo "Creating PR for $branch -> dev"
+          gh pr create --head "$branch" --base "dev" --title "Merge $branch into dev" --body "Automated PR to merge $branch into dev."
+        done < feature_branches.txt
+open_pr_dev_to_main:
+  runs-on: ubuntu-latest
+  needs: open_pr_feature_to_dev
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Fetch all branches
+      run: git fetch --all
+    - name: Check if dev branch exists
+      id: check_dev_branch
+      run: |
+        if git branch -r | grep -q "origin/dev"; then
+          echo "dev branch exists."
+        else
+          echo "No dev branch found."
+          exit 0
+        fi
+    - name: Create PR for dev to main
+      if: steps.check_dev_branch.outcome == 'success'
+      env:
+        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      run: >
+        echo "Creating PR for dev -> main"
 
-      - name: Create PR from feature* to dev
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          branch: feature*
-          base: dev
-          title: "Merge feature branches to dev"
-          body: "Automated PR to merge feature branches into dev."
+        gh pr create --head "dev" --base "main" --title "Merge dev into main" --body "Automated PR to merge dev into main."
