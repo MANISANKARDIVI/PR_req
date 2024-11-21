@@ -2,7 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: ["dev"]
+    branches:
+      - dev # Trigger on commits to the dev branch
+      - main # Also trigger on commits to the main branch
 
 jobs:
   test:
@@ -18,18 +20,18 @@ jobs:
 
       - name: Install dependencies
         run: |
-          go mod tidy  # Ensure the go.mod and go.sum files are up-to-date
+          go mod tidy
           go get -v ./...
+
       - name: Install the application
         run: go install ./...
 
       - name: Run tests
-        run: go test -v ./... || exit 1 # Fail the job if tests fail
+        run: go test -v ./... || exit 1
 
-  # Build the application and upload artifact
   build:
     runs-on: ubuntu-latest
-    needs: test # Build job only runs after tests pass
+    needs: test
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -49,10 +51,9 @@ jobs:
           ls -la
           tree dist
 
-  # Docker build, push to registry.
   docker_build_push:
     runs-on: ubuntu-latest
-    needs: build # Docker build & push only runs after build succeeds
+    needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -75,68 +76,48 @@ jobs:
           else
             echo "VERSION file not found!"
             exit 1
-          fi
+
       - name: Build and push Docker image
         run: |
           docker build -t manisankardivi/new:${{ env.VERSION }} .
           docker push manisankardivi/new:${{ env.VERSION }}
 
-  # Update Kubernetes manifest file with the new image version
   k8s-manifest-files_update:
     runs-on: ubuntu-latest
-    needs: docker_build_push # Manifest update only runs after Docker image is pushed
+    needs: docker_build_push
+    if: github.ref == 'refs/heads/main' # Only run this job if the branch is 'main'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Read version from VERSION file
         run: |
-          # Read the version from the VERSION file
           VERSION=$(cat VERSION)
           echo "Version extracted: $VERSION"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV  # Save version to environment variable
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Checkout Kubernetes repo
         run: |
-          # Clone the k8s-repo repository
-
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
           cd k8s_repo
 
-          # Replace the image version in manifest.yaml with the extracted version
           sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
 
-          # Display the image section (line containing image: manisankardivi/new:)
           echo "Image Section:"
           grep "image: manisankardivi/new:" manifest.yaml
-
-          # Ensure we are in the correct directory
-          echo "Current working directory: $(pwd)"
-
-          # Check for any changes in the file and commit if there are updates
-          git status
-          git diff
 
       - name: Check for changes and commit if updated
         run: |
           cd k8s_repo
-
-          # Configure Git with user info
           git config --global user.email "manisankardivi@gmail.com"
           git config --global user.name "manisankardivi"
 
-          # Stage the changes to manifest.yaml explicitly
           git add manifest.yaml
 
-          # Check if there are any changes in the manifest file
           if git diff --cached --exit-code --quiet; then
-            echo "Version Not Updated"  # No changes to commit, version is still the same
+            echo "Version Not Updated"
           else
-            echo "Version Updated"  # Version was updated
-            
-            # Commit the changes
+            echo "Version Updated"
             git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
-            
-            # Push the changes to the repository
             git push origin main
           fi
