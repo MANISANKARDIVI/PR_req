@@ -1,26 +1,12 @@
-name: CI Pipeline
+name: CI/CD Pipeline
+
 on:
-  pull_request:
-    branches:
-      - main # Listen for pull requests targeting the 'main' branch
-    types:
-      - closed # Trigger only when the PR is closed (merged or rejected)
+  push:
+    branches: ["dev"]
 
 jobs:
-  check-pr-merged:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check if pull request was merged
-        run: |
-          if [[ ${{ github.event.pull_request.merged }} == 'true' ]]; then
-            echo "PR was merged, proceeding with the pipeline."
-          else
-            echo "PR was not merged, skipping pipeline."
-            exit 0  # Exit if not merged
-
   test:
     runs-on: ubuntu-latest
-    needs: check-pr-merged
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,6 +26,7 @@ jobs:
       - name: Run tests
         run: go test -v ./... || exit 1 # Fail the job if tests fail
 
+  # Build the application and upload artifact
   build:
     runs-on: ubuntu-latest
     needs: test # Build job only runs after tests pass
@@ -62,6 +49,7 @@ jobs:
           ls -la
           tree dist
 
+  # Docker build, push to registry.
   docker_build_push:
     runs-on: ubuntu-latest
     needs: build # Docker build & push only runs after build succeeds
@@ -88,46 +76,67 @@ jobs:
             echo "VERSION file not found!"
             exit 1
           fi
-
       - name: Build and push Docker image
         run: |
           docker build -t manisankardivi/new:${{ env.VERSION }} .
           docker push manisankardivi/new:${{ env.VERSION }}
 
+  # Update Kubernetes manifest file with the new image version
   k8s-manifest-files_update:
     runs-on: ubuntu-latest
-    needs: docker_build_push
+    needs: docker_build_push # Manifest update only runs after Docker image is pushed
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Read version from VERSION file
         run: |
+          # Read the version from the VERSION file
           VERSION=$(cat VERSION)
           echo "Version extracted: $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV  # Save version to environment variable
 
       - name: Checkout Kubernetes repo
         run: |
+          # Clone the k8s-repo repository
+
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
           cd k8s_repo
 
-          # Make sure we're on the correct branch
-          git checkout main
-
-          # Replace the image version in manifest.yaml
+          # Replace the image version in manifest.yaml with the extracted version
           sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
 
-      - name: Commit and push Kubernetes manifest updates
+          # Display the image section (line containing image: manisankardivi/new:)
+          echo "Image Section:"
+          grep "image: manisankardivi/new:" manifest.yaml
+
+          # Ensure we are in the correct directory
+          echo "Current working directory: $(pwd)"
+
+          # Check for any changes in the file and commit if there are updates
+          git status
+          git diff
+
+      - name: Check for changes and commit if updated
         run: |
           cd k8s_repo
+
+          # Configure Git with user info
           git config --global user.email "manisankardivi@gmail.com"
           git config --global user.name "manisankardivi"
+
+          # Stage the changes to manifest.yaml explicitly
           git add manifest.yaml
 
+          # Check if there are any changes in the manifest file
           if git diff --cached --exit-code --quiet; then
-            echo "Version Not Updated"  # No changes to commit
+            echo "Version Not Updated"  # No changes to commit, version is still the same
           else
-            echo "Version Updated"
+            echo "Version Updated"  # Version was updated
+            
+            # Commit the changes
             git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
+            
+            # Push the changes to the repository
             git push origin main
+          fi
