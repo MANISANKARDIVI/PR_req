@@ -1,161 +1,144 @@
----
-  name: CI/CD Pipeline
-  on:
-    push:
-      branches:
-        - dev
-  jobs:
-    create-pr:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v4
-        - name: Create Pull Request from dev to main
-          uses: peter-evans/create-pull-request@v7
-          with:
-            token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-            branch: dev
-            base: main
-            title: Automated PR from dev to main
-            body: This PR was created automatically by the CI/CD pipeline. Please review and
-              merge.
-            draft: false
-    check-pr-merged:
-      runs-on: ubuntu-latest
-      needs: create-pr
-      steps:
-        - name: Wait for PR merge
-          run: >
-            PR_NUMBER="${{ steps.create-pr.outputs.pull_number }}"
-  
-            PR_STATUS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER" | jq -r '.merged')
-  
-            # Proceed only if PR is merged
-  
-            if [ "$PR_STATUS" != "true" ]; then
-              echo "PR was not merged, skipping pipeline."
-              exit 0  # Exit if PR not merged
-            fi
-  
-            echo "PR was merged, proceeding with the pipeline."
-    pipeline:
-      runs-on: ubuntu-latest
-      needs: check-pr-merged
-      if: success()
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-        - name: Set up Go
-          uses: actions/setup-go@v5
-          with:
-            go-version: 1.23.2
-        - name: Install dependencies
-          run: |
-            go mod tidy
-            go get -v ./...
-        - name: Run tests
-          run: go test -v ./... || exit 1
-    docker_build_push:
-      runs-on: ubuntu-latest
-      needs: pipeline
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v3
-        - name: Docker login to Docker Hub
-          uses: docker/login-action@v3
-          with:
-            username: ${{ secrets.DOCKERHUB_USERNAME }}
-            password: ${{ secrets.DOCKERHUB_TOKEN }}
-        - name: Read version from VERSION file
-          id: read_version
-          run: |
-            if [ -f VERSION ]; then
-              VERSION=$(cat VERSION | xargs)
-              echo "VERSION=$VERSION" >> $GITHUB_ENV
-            else
-              echo "VERSION file not found!"
-              exit 1
-            fi
-        - name: Build and push Docker image
-          run: |
-            docker build -t manisankardivi/new:${{ env.VERSION }} .
-            docker push manisankardivi/new:${{ env.VERSION }}
-    k8s-manifest-files_update:
-      runs-on: ubuntu-latest
-      needs: docker_build_push
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-        - name: Read version from VERSION file
-          run: >
-            # Read the version from the VERSION file
-  
-            VERSION=$(cat VERSION)
-  
-            echo "Version extracted: $VERSION"
-  
-            echo "VERSION=$VERSION" >> $GITHUB_ENV  # Save version to environment variable
-        - name: Checkout Kubernetes repo
-          run: >
-            # Clone the k8s-repo repository
-  
-            git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/manisankar-divi/k8s-repo.git
-  
-            cd k8s-repo
-  
-  
-            # Replace the image version in manifest.yaml with the extracted version
-  
-            sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
-  
-  
-            # Display the image section (line containing image: manisankardivi/new:)
-  
-            echo "Image Section:"
-  
-            grep "image: manisankardivi/new:" manifest.yaml
-  
-  
-            # Ensure we are in the correct directory
-  
-            echo "Current working directory: $(pwd)"
-  
-  
-            # Check for any changes in the file and commit if there are updates
-  
-            git status
-  
-            git diff
-        - name: Check for changes and commit if updated
-          run: >
-            cd k8s-repo
-  
-  
-            # Configure Git with user info
-  
-            git config --global user.email "manisankar-divi@gmail.com"
-  
-            git config --global user.name "manisankar-divi"
-  
-  
-            # Stage the changes to manifest.yaml explicitly
-  
-            git add manifest.yaml
-  
-  
-            # Check if there are any changes in the manifest file
-  
-            if git diff --cached --exit-code --quiet; then
-              echo "Version Not Updated"  # No changes to commit, version is still the same
-            else
-              echo "Version Updated"  # Version was updated
-              
-              # Commit the changes
-              git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
-              
-              # Push the changes to the repository
-              git push origin main
-            fi
-  
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: ["dev"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.2"
+
+      - name: Install dependencies
+        run: |
+          go mod tidy  # Ensure the go.mod and go.sum files are up-to-date
+          go get -v ./...
+      - name: Install the application
+        run: go install ./...
+
+      - name: Run tests
+        run: go test -v ./... || exit 1 # Fail the job if tests fail
+
+  # Build the application and upload artifact
+  build:
+    runs-on: ubuntu-latest
+    needs: test # Build job only runs after tests pass
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build the application
+        run: go build -v -o dist/main ./...
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-build-artifact
+          path: dist/main
+          if-no-files-found: warn
+
+      - name: Checking artifact
+        run: |
+          ls -la
+          tree dist
+
+  # Docker build, push to registry.
+  docker_build_push:
+    runs-on: ubuntu-latest
+    needs: build # Docker build & push only runs after build succeeds
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Read version from VERSION file
+        id: read_version
+        run: |
+          if [ -f VERSION ]; then
+            VERSION=$(cat VERSION | xargs)
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+          else
+            echo "VERSION file not found!"
+            exit 1
+          fi
+      - name: Build and push Docker image
+        run: |
+          docker build -t manisankardivi/new:${{ env.VERSION }} .
+          docker push manisankardivi/new:${{ env.VERSION }}
+
+  # Update Kubernetes manifest file with the new image version
+  k8s-manifest-files_update:
+    runs-on: ubuntu-latest
+    needs: docker_build_push # Manifest update only runs after Docker image is pushed
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Read version from VERSION file
+        run: |
+          # Read the version from the VERSION file
+          VERSION=$(cat VERSION)
+          echo "Version extracted: $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV  # Save version to environment variable
+
+      - name: Checkout Kubernetes repo
+        run: |
+          # Clone the k8s-repo repository
+
+          git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
+          cd k8s_repo
+
+          # Replace the image version in manifest.yaml with the extracted version
+          sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
+
+          # Display the image section (line containing image: manisankardivi/new:)
+          echo "Image Section:"
+          grep "image: manisankardivi/new:" manifest.yaml
+
+          # Ensure we are in the correct directory
+          echo "Current working directory: $(pwd)"
+
+          # Check for any changes in the file and commit if there are updates
+          git status
+          git diff
+
+      - name: Check for changes and commit if updated
+        run: |
+          cd k8s_repo
+
+          # Configure Git with user info
+          git config --global user.email "manisankardivi@gmail.com"
+          git config --global user.name "manisankardivi"
+
+          # Stage the changes to manifest.yaml explicitly
+          git add manifest.yaml
+
+          # Check if there are any changes in the manifest file
+          if git diff --cached --exit-code --quiet; then
+            echo "Version Not Updated"  # No changes to commit, version is still the same
+          else
+            echo "Version Updated"  # Version was updated
+            
+            # Commit the changes
+            git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
+            
+            # Push the changes to the repository
+            git push origin main
+          fi
