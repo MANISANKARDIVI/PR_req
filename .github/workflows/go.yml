@@ -101,7 +101,7 @@ jobs:
       - name: Checkout Kubernetes repo
         run: |
           # Clone the k8s-repo repository
-          git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/manisankar-divi/k8s-repo.git
+          git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/manisankardivi/k8s_repo.git
           cd k8s-repo
 
           # Replace the image version in manifest.yaml with the extracted version
@@ -124,7 +124,7 @@ jobs:
 
           # Configure Git with user info
           git config --global user.email "manisankar.divi@gmail.com"
-          git config --global user.name "manisankar.divi"
+          git config --global user.name "manisankardivi"
 
           # Stage the changes to manifest.yaml explicitly
           git add manifest.yaml
