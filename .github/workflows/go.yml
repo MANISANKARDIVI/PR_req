@@ -111,7 +111,7 @@ jobs:
           ls -al
           git status || echo "Not a git repository"
 
-      - name: Create Pull Request
+      - name: Create PR from dev to main
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
@@ -119,3 +119,12 @@ jobs:
           base: main
           title: "Merge dev to main"
           body: "Automated PR to merge dev into main."
+
+      - name: Create PR from feature* to dev
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          branch: feature*
+          base: dev
+          title: "Merge feature branches to dev"
+          body: "Automated PR to merge feature branches into dev."
