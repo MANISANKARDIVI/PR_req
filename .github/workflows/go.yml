@@ -11,15 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Create Pull Request from dev to main
         uses: peter-evans/create-pull-request@v7
         with:
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          from-branch: dev # Source branch
-          to-branch: main # Target branch (main)
+          from-branch: dev  # Source branch (dev)
+          to-branch: main  # Target branch (main)
           title: "Automated PR from dev to main"
           body: "This PR was created automatically by the CI/CD pipeline. Please review and merge."
-          draft: false # Set to true if you want to create a draft PR
+          draft: false  # Set to true if you want to create a draft PR
+
+      - name: Echo mergeable PR number
+        run: echo "Created PR number: ${{ steps.create-pr.outputs.pull_number }}"
 
   # This job waits for the PR to be merged and then continues
   check-pr-merged:
@@ -43,7 +47,7 @@ jobs:
   pipeline:
     runs-on: ubuntu-latest
     needs: check-pr-merged
-    if: success() # Only runs if the previous job (check-pr-merged) was successful
+    if: success()  # Only runs if the previous job (check-pr-merged) was successful
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -59,7 +63,7 @@ jobs:
           go get -v ./...
 
       - name: Run tests
-        run: go test -v ./... || exit 1 # Fail the job if tests fail
+        run: go test -v ./... || exit 1  # Fail the job if tests fail
 
   # This job builds and pushes the Docker image after the PR is merged
   docker_build_push:
