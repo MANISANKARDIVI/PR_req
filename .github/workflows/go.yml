@@ -12,15 +12,17 @@ jobs:
     steps:
       - name: Check if pull request was merged
         run: |
-          if [[ ${{ github.event.pull_request.merged }} == 'true' ]]; then
+          if [[ "${{ github.event.pull_request.merged }}" == 'true' ]]; then
             echo "PR was merged, proceeding with the pipeline."
           else
             echo "PR was not merged, skipping pipeline."
             exit 0  # Exit if not merged
           fi
+
   test:
     runs-on: ubuntu-latest
     needs: check-pr-merged
+    if: success() # Run only if the previous job was successful (PR merged)
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -42,7 +44,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    needs: test # Build job only runs after tests pass
+    needs: test
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -64,7 +66,7 @@ jobs:
 
   docker_build_push:
     runs-on: ubuntu-latest
-    needs: build # Docker build & push only runs after build succeeds
+    needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -88,7 +90,6 @@ jobs:
             echo "VERSION file not found!"
             exit 1
           fi
-
       - name: Build and push Docker image
         run: |
           docker build -t manisankardivi/new:${{ env.VERSION }} .
@@ -112,13 +113,14 @@ jobs:
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
           cd k8s_repo
 
-          # Make sure we're on the correct branch
-          git checkout main
-
-          # Replace the image version in manifest.yaml
+          # Replace the image version in manifest.yaml with the extracted version
           sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
 
-      - name: Commit and push Kubernetes manifest updates
+          # Display the image section (line containing image: manisankardivi/new:)
+          echo "Image Section:"
+          grep "image: manisankardivi/new:" manifest.yaml
+
+      - name: Check for changes and commit if updated
         run: |
           cd k8s_repo
           git config --global user.email "manisankardivi@gmail.com"
@@ -126,7 +128,7 @@ jobs:
           git add manifest.yaml
 
           if git diff --cached --exit-code --quiet; then
-            echo "Version Not Updated"  # No changes to commit
+            echo "Version Not Updated"
           else
             echo "Version Updated"
             git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
