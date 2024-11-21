@@ -136,3 +136,4 @@ jobs:
             echo "Version Updated"
             git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
             git push origin main
+          fi
