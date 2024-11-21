@@ -106,59 +106,15 @@ jobs:
             git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
             git push origin main
           fi
+          - name: Open PR
+          id: open_pr
+          uses: rematocorp/open-pull-request-action@v1
+          with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+            from-branch: change_this
+            to-branch: change_this
+            repository-owner: change_this
+            repository: change_this
 
-  open_pr_feature_to_dev:
-  runs-on: ubuntu-latest
-  needs: k8s-manifest-files_update
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Fetch all branches
-      run: git fetch --all
-    - name: List feature branches
-      id: find_feature_branches
-      run: >
-        git branch -r | grep "origin/feature" | sed 's|origin/||' >
-        feature_branches.txt
-
-        if [ -s feature_branches.txt ]; then
-          echo "Found feature branches:"
-          cat feature_branches.txt
-        else
-          echo "No feature branches found."
-          exit 0
-        fi
-    - name: Create PRs for feature branches to dev
-      if: steps.find_feature_branches.outcome == 'success'
-      env:
-        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      run: >
-        while read -r branch; do
-          echo "Creating PR for $branch -> dev"
-          gh pr create --head "$branch" --base "dev" --title "Merge $branch into dev" --body "Automated PR to merge $branch into dev."
-        done < feature_branches.txt
-open_pr_dev_to_main:
-  runs-on: ubuntu-latest
-  needs: open_pr_feature_to_dev
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Fetch all branches
-      run: git fetch --all
-    - name: Check if dev branch exists
-      id: check_dev_branch
-      run: |
-        if git branch -r | grep -q "origin/dev"; then
-          echo "dev branch exists."
-        else
-          echo "No dev branch found."
-          exit 0
-        fi
-    - name: Create PR for dev to main
-      if: steps.check_dev_branch.outcome == 'success'
-      env:
-        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      run: >
-        echo "Creating PR for dev -> main"
-
-        gh pr create --head "dev" --base "main" --title "Merge dev into main" --body "Automated PR to merge dev into main."
+      - name: Echo mergeable PR number
+        run: echo ${{ steps.open_pr.outputs.pull_number }}
