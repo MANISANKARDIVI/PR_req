@@ -2,9 +2,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "dev"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "dev"]
 
 jobs:
   test:
@@ -109,3 +109,5 @@ jobs:
             git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
             git push origin main
           fi
+
+# CI Pipeline
