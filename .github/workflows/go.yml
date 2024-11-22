@@ -5,6 +5,7 @@ on:
     branches:
       - main # Also trigger on commits to the main branch
       - dev # Trigger on commits to the dev branch
+      - feature
       - feature/* # Trigger on commits to branches starting with 'feature/'
       - hotfix/* # Trigger on commits to branches starting with 'hotfix/'
       - release/* # Trigger on commits to branches starting with'release/'
