@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - mainn # Also trigger on commits to the main branch
+      - main # Also trigger on commits to the main branch
       - dev # Trigger on commits to the dev branch
       - feature/* # Trigger on commits to branches starting with 'feature/'
 
