@@ -1,15 +1,13 @@
 name: CI/CD Pipeline
 
 on:
+  pull_request:
+    branches:
+      - dev # Trigger PRs from feature/hotfix to dev
+    types: [opened, synchronize, reopened] # Runs when a PR is opened, updated, or reopened
   push:
     branches:
-      - main # Also trigger on commits to the main branch
-      - dev # Trigger on commits to the dev branch
-      - feature
-      - feature/* # Trigger on commits to branches starting with 'feature/'
-      - hotfix/* # Trigger on commits to branches starting with 'hotfix/'
-      - release/* # Trigger on commits to branches starting with'release/'
-
+      - main # Trigger on push to the main branch
 jobs:
   test:
     runs-on: ubuntu-latest
