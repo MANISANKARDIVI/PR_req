@@ -109,9 +109,10 @@ jobs:
         run: |
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
           cd k8s_repo
-
+          git branch
           # Create a new branch using the version
           git checkout -b feature/$VERSION
+          git branch
 
           # Update the manifest.yaml with the new version
           sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
@@ -125,7 +126,7 @@ jobs:
           git config --global user.email "manisankardivi@gmail.com"
           git config --global user.name "manisankardivi"
 
-          git add manifest.yaml
+          git add .
 
           if git diff --cached --exit-code --quiet; then
             echo "No changes to commit."
