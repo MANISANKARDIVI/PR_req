@@ -7,7 +7,7 @@ on:
     types: [opened, synchronize, reopened] # Runs when a PR is opened, updated, or reopened
   push:
     branches:
-      - main # Trigger on push to the main branch
+      - main # Also trigger on commits to the main branch
 jobs:
   test:
     runs-on: ubuntu-latest
