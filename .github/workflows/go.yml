@@ -81,7 +81,7 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker buildx build -t manisankardivi/new:${{ env.VERSION }} .
+          docker build -t manisankardivi/new:${{ env.VERSION }} .
 
       - name: Push Docker Image (main branch only)
         if: github.ref == 'refs/heads/main'
