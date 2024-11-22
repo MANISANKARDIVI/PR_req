@@ -3,13 +3,11 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - dev # Trigger on commits to the dev branch
-      - feature/*
-      - hotfix/**
+      - main
 
   pull_request:
     branches:
-      - main # Trigger on pull requests to the dev branch
+      - dev # Trigger on pull requests to the dev branch
 
 jobs:
   test:
