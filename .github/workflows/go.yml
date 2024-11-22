@@ -1,13 +1,13 @@
-name: CI/CD Pipeline
+rname: CI/CD Pipeline
 
 on:
   push:
     branches:
-      - main
+      - main # Also trigger on commits to the main branch
 
   pull_request:
     branches:
-      - dev # Trigger on pull requests to the dev branch
+      - dev # Also trigger on pull requests to the main branch
 
 jobs:
   test:
@@ -25,7 +25,6 @@ jobs:
         run: |
           go mod tidy
           go get -v ./...
-
       - name: Install the application
         run: go install ./...
 
@@ -53,7 +52,6 @@ jobs:
         run: |
           ls -la
           tree dist
-
   docker_build_push:
     runs-on: ubuntu-latest
     needs: build
@@ -80,16 +78,13 @@ jobs:
             echo "VERSION file not found!"
             exit 1
           fi
-
       - name: Build and push Docker image
         run: |
           docker build -t manisankardivi/new:${{ env.VERSION }} .
-
       - name: Push Docker Image (main branch only)
         if: github.ref == 'refs/heads/main'
         run: |
           docker push manisankardivi/new:${{ env.VERSION }}
-
   k8s-manifest-files_update:
     runs-on: ubuntu-latest
     needs: docker_build_push
@@ -103,39 +98,23 @@ jobs:
           VERSION=$(cat VERSION)
           echo "Version extracted: $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-
       - name: Checkout Kubernetes repo
         run: |
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
           cd k8s_repo
-          git init .
-
-          # Configure git user for commits
+          sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
+          echo "Image Section:"
+          grep "image: manisankardivi/new:" manifest.yaml
+      - name: Check for changes and commit if updated
+        run: |
+          cd k8s_repo
           git config --global user.email "manisankardivi@gmail.com"
           git config --global user.name "manisankardivi"
-
-          # Create and switch to the new branch based on the version
-          git branch
-          git checkout -b feature/go-${{ env.VERSION }}
-
-          git branch
-
-          # Stage changes
-          git add .
-
-          # Check if there are changes to commit
+          git add manifest.yaml
           if git diff --cached --exit-code --quiet; then
-            echo "No changes to commit."
+            echo "Version Not Updated"
           else
-            echo "Changes detected, committing to new branch."
+            echo "Version Updated"
             git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
-            
-            # Push to the newly created branch
-            git push origin feature/go-${{ env.VERSION }}
+            git push origin main
           fi
-
-          # Update the manifest.yaml with the new version
-          sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
-
-          echo "Updated Image Section:"
-          grep "image: manisankardivi/new:" manifest.yaml
