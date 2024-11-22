@@ -6,6 +6,8 @@ on:
       - main # Also trigger on commits to the main branch
       - dev # Trigger on commits to the dev branch
       - feature/* # Trigger on commits to branches starting with 'feature/'
+      - hotfix/* # Trigger on commits to branches starting with 'hotfix/'
+      - release/* # Trigger on commits to branches starting with'release/'
 
 jobs:
   test:
@@ -107,10 +109,13 @@ jobs:
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
           cd k8s_repo
 
+          # Create a new branch using the version
+          git checkout -b feature/$VERSION
 
+          # Update the manifest.yaml with the new version
           sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
 
-          echo "Image Section:"
+          echo "Updated Image Section:"
           grep "image: manisankardivi/new:" manifest.yaml
 
       - name: Check for changes and commit if updated
@@ -122,9 +127,9 @@ jobs:
           git add manifest.yaml
 
           if git diff --cached --exit-code --quiet; then
-            echo "Version Not Updated"
+            echo "No changes to commit."
           else
-            echo "Version Updated"
+            echo "Changes detected, committing to new branch."
             git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
-            git push origin main
+            git push origin feature/go-$VERSION  # Push to the new branch
           fi
