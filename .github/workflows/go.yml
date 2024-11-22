@@ -3,9 +3,11 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main # Also trigger on commits to the main branch
-      - dev # Trigger on commits to the dev branch
-      - feature/* # Trigger on commits to branches starting with 'feature/'
+      - main
+
+  pull_request:
+    branches:
+      - dev # Trigger on pull requests to the dev branch
 
 jobs:
   test:
@@ -106,25 +108,34 @@ jobs:
         run: |
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
           cd k8s_repo
+          git init .
 
-
-          sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
-
-          echo "Image Section:"
-          grep "image: manisankardivi/new:" manifest.yaml
-
-      - name: Check for changes and commit if updated
-        run: |
-          cd k8s_repo
+          # Configure git user for commits
           git config --global user.email "manisankardivi@gmail.com"
           git config --global user.name "manisankardivi"
 
-          git add manifest.yaml
+          # Create and switch to the new branch based on the version
+          git branch
+          git checkout -b feature/go-${{ env.VERSION }}
 
+          git branch
+
+          # Stage changes
+          git add .
+
+          # Check if there are changes to commit
           if git diff --cached --exit-code --quiet; then
-            echo "Version Not Updated"
+            echo "No changes to commit."
           else
-            echo "Version Updated"
+            echo "Changes detected, committing to new branch."
             git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
-            git push origin main
+            
+            # Push to the newly created branch
+            git push origin feature/go-${{ env.VERSION }}
           fi
+
+          # Update the manifest.yaml with the new version
+          sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
+
+          echo "Updated Image Section:"
+          grep "image: manisankardivi/new:" manifest.yaml
