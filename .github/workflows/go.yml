@@ -99,6 +99,7 @@ jobs:
           VERSION=$(cat VERSION)
           echo "Version extracted: $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          
       - name: Checkout Kubernetes repo
         run: |
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
@@ -106,27 +107,28 @@ jobs:
           sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
           echo "Image Section:"
           grep "image: manisankardivi/new:" manifest.yaml
+          
       - name: Check for changes and commit if updated
         run: |
-          git version
-          ls -la
+          cd k8s_repo
           git config --global user.email "manisankardivi@gmail.com"
           git config --global user.name "manisankardivi"
+          git add .
           if git diff --cached --exit-code --quiet; then
-            echo "Version Not Updated"
+            echo "No changes detected in manifest.yaml. Skipping commit and branch creation."
+            echo "SKIP_BRANCH=true" >> $GITHUB_ENV
           else
-            echo "Version Updated"
+            echo "Changes detected. Committing changes."
             git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
+            echo "SKIP_BRANCH=false" >> $GITHUB_ENV
           fi
 
       - name: Create and push new branch with version (if changes exist)
+        if: env.SKIP_BRANCH == 'false' # Only run if changes exist
         run: |
-            
+            cd k8s_repo
             NEW_BRANCH="release-v$VERSION"
             git checkout -b "$NEW_BRANCH"
-            pwd
-            git branch
-            git add .
-            git commit -m "Branch $NEW_BRANCH created and pushed."
             git push origin "$NEW_BRANCH"
+            echo "Branch $NEW_BRANCH created and pushed successfully."
             
