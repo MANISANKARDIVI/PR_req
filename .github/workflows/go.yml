@@ -40,7 +40,9 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text:  "🚀 Test job ompleted successfully!* :tada:
+            text:  "🚀 Test job completed successfully!* :tada:
+            Build Number: ${{ github.run_number }}
+            Workflow Number: ${{ github.run_id }}
             Commit: ${{ github.sha }}
             URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
 
@@ -53,6 +55,8 @@ jobs:
           webhook-type: incoming-webhook
           payload: |
             text:  "❌ Test job failed for branch :x:
+            Build Number: ${{ github.run_number }}
+            Workflow Number: ${{ github.run_id }}
             Commit: ${{ github.sha }}
             URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
 
@@ -86,7 +90,9 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "*Build job completed successfully!* :tada:
+            text: "✅ Build job completed successfully for ${{ github.ref_name }}:tada:
+            Build Number: ${{ github.run_number }}
+            Workflow Number: ${{ github.run_id }}
             Commit: ${{ github.sha }}
             URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
 
@@ -98,7 +104,9 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "*Build job failed!* :x:
+            text: "❌ Build job failed for branch ${{ github.ref_name }} :x:
+            Build Number: ${{ github.run_number }}
+            Workflow Number: ${{ github.run_id }}
             Commit: ${{ github.sha }}
             URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
 
@@ -146,7 +154,9 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "*Docker image pushed successfully!* :tada:
+            text: "✅ Docker job completed successfully ${{ github.ref_name }} :tada:
+            Build Number: ${{ github.run_number }}
+            Workflow Number: ${{ github.run_id }}
             Commit: ${{ github.sha }}
             URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
 
@@ -158,7 +168,9 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "*Docker image push failed!* :x:
+            text: "❌ Docker job failed for branch: ${{ github.ref_name }} :x:
+            Build Number: ${{ github.run_number }}
+            Workflow Number: ${{ github.run_id }}
             Commit: ${{ github.sha }}
             URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
 
@@ -216,7 +228,9 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "*Kubernetes manifest update completed successfully!* :tada:
+            text: "✅ Kubernetes manifest update completed successfully!* :tada:
+            Build Number: ${{ github.run_number }}
+            Workflow Number: ${{ github.run_id }}
             Commit: ${{ github.sha }}
             URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
 
@@ -228,6 +242,8 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "*Kubernetes manifest update failed!* :x:
+            text: "❌ k8s-manifest-files_update job failed for branch: ${{ github.ref_name }} :x:
+            Build Number: ${{ github.run_number }}
+            Workflow Number: ${{ github.run_id }}
             Commit: ${{ github.sha }}
             URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
