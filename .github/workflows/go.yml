@@ -1,9 +1,9 @@
 name: CI Pipeline
 
 on:
-  push:
-    branches:
-      - main # Also trigger on commits to the main branch
+  # push:
+  #   branches:
+  #     - main # Also trigger on commits to the main branch
 
   pull_request:
     branches:
@@ -131,4 +131,3 @@ jobs:
             git checkout -b "$NEW_BRANCH"
             git push origin "$NEW_BRANCH"
             echo "Branch $NEW_BRANCH created and pushed successfully."
-            
