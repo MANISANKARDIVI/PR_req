@@ -1,14 +1,14 @@
 name: CI Pipeline
 
 on:
-  # push:
-  #   branches:
-  #     - main # Also trigger on commits to the main branch
+  push:
+    branches:
+      - main # Also trigger on commits to the main branch
 
   pull_request:
     branches:
-      - dev
       - main # Also trigger on pull requests to the main branch
+      - dev
 
 jobs:
   test:
@@ -99,7 +99,7 @@ jobs:
           VERSION=$(cat VERSION)
           echo "Version extracted: $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          
+
       - name: Checkout Kubernetes repo
         run: |
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
@@ -107,7 +107,7 @@ jobs:
           sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
           echo "Image Section:"
           grep "image: manisankardivi/new:" manifest.yaml
-          
+
       - name: Check for changes and commit if updated
         run: |
           cd k8s_repo
@@ -126,8 +126,8 @@ jobs:
       - name: Create and push new branch with version (if changes exist)
         if: env.SKIP_BRANCH == 'false' # Only run if changes exist
         run: |
-            cd k8s_repo
-            NEW_BRANCH="release-v$VERSION"
-            git checkout -b "$NEW_BRANCH"
-            git push origin "$NEW_BRANCH"
-            echo "Branch $NEW_BRANCH created and pushed successfully."
+          cd k8s_repo
+          NEW_BRANCH="release-v$VERSION"
+          git checkout -b "$NEW_BRANCH"
+          git push origin "$NEW_BRANCH"
+          echo "Branch $NEW_BRANCH created and pushed successfully."
