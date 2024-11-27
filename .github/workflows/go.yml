@@ -40,10 +40,9 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text:  "🚀 Test job completed successfully!* :tada:
-            Build Number: ${{ github.run_number }}
-            Workflow Number: ${{ github.run_id }}
-            Commit: ${{ github.sha }}
+            text:  "✅ Test job completed successfully!* :tada:,
+            Build Number: ${{ github.run_number }},
+            Commit: ${{ github.sha }},
             URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
 
       # Slack Notification for Failure
@@ -54,10 +53,9 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text:  "❌ Test job failed for branch :x:
-            Build Number: ${{ github.run_number }}
-            Workflow Number: ${{ github.run_id }}
-            Commit: ${{ github.sha }}
+            text:  "❌ Test job failed for branch :x:,
+            Build Number: ${{ github.run_number }},
+            Commit: ${{ github.sha }},
             URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
 
   build:
