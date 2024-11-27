@@ -3,188 +3,231 @@ name: CI Pipeline
 on:
   push:
     branches:
-      - main
+      - main # Also trigger on commits to the main branch
+
   pull_request:
     branches:
-      - main
+      - main # Also trigger on pull requests to the main branch
       - dev
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      # Notify Slack: Test Job Started
-      - name: Notify Slack - Test Job Started
-        uses: slackapi/slack-github-action@v2.0.0
-        with:
-          payload: |
-            {
-              "channel": "go-project-gha",
-              "text": "🚀 Test job started for branch: ${{ github.ref_name }}."
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-
-      # Checkout Code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Set up Go
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.23.2"
 
-      # Install Dependencies
       - name: Install dependencies
         run: |
           go mod tidy
           go get -v ./...
-
-      # Install the Application
       - name: Install the application
         run: go install ./...
 
-      # Run Tests
       - name: Run tests
-        run: go test -v ./...
+        run: go test -v ./... || exit 1
 
-      # Notify Slack: Test Job Success
-      - name: Notify Slack - Test Job Successful
-        if: success()
+      # Slack Notification for Success
+      - name: Notify Slack on Success
+        if: ${{ success() }}
         uses: slackapi/slack-github-action@v2.0.0
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: |
-            {
-              "channel": "go-project-gha",
-              "text": "✅ Test job completed successfully for branch: ${{ github.ref_name }}."
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+            text: "*Test job completed successfully!* :tada:
+            Commit: ${{ github.sha }}
+            URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
 
-      # Notify Slack: Test Job Failure
-      - name: Notify Slack - Test Job Failed
-        if: failure()
+      # Slack Notification for Failure
+      - name: Notify Slack on Failure
+        if: ${{ failure() }}
         uses: slackapi/slack-github-action@v2.0.0
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: |
-            {
-              "channel": "go-project-gha",
-              "text": "❌ Test job failed for branch: ${{ github.ref_name }}.\nWorkflow: ${{ github.workflow }}."
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+            text: "*Test job failed!* :x:
+            Commit: ${{ github.sha }}
+            URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
 
   build:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      # Notify Slack: Build Job Started
-      - name: Notify Slack - Build Job Started
-        uses: slackapi/slack-github-action@v2.0.0
-        with:
-          payload: |
-            {
-              "channel": "go-project-gha",
-              "text": "🏗️ Build job started for branch: ${{ github.ref_name }}."
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-
-      # Checkout Code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Build the Application
       - name: Build the application
         run: go build -v -o dist/main ./...
 
-      # Notify Slack: Build Job Success
-      - name: Notify Slack - Build Job Successful
-        if: success()
-        uses: slackapi/slack-github-action@v2.0.0
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
-          payload: |
-            {
-              "channel": "go-project-gha",
-              "text": "✅ Build job completed successfully for branch: ${{ github.ref_name }}."
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          name: go-build-artifact
+          path: dist/main
+          if-no-files-found: warn
 
-      # Notify Slack: Build Job Failure
-      - name: Notify Slack - Build Job Failed
-        if: failure()
+      - name: Checking artifact
+        run: |
+          ls -la
+          tree dist
+
+      # Slack Notification for Success
+      - name: Notify Slack on Success
+        if: ${{ success() }}
         uses: slackapi/slack-github-action@v2.0.0
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: |
-            {
-              "channel": "go-project-gha",
-              "text": "❌ Build job failed for branch: ${{ github.ref_name }}.\nWorkflow: ${{ github.workflow }}."
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+            text: "*Build job completed successfully!* :tada:
+            Commit: ${{ github.sha }}
+            URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+
+      # Slack Notification for Failure
+      - name: Notify Slack on Failure
+        if: ${{ failure() }}
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "*Build job failed!* :x:
+            Commit: ${{ github.sha }}
+            URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
 
   docker_build_push:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      # Notify Slack: Docker Job Started
-      - name: Notify Slack - Docker Job Started
-        uses: slackapi/slack-github-action@v2.0.0
-        with:
-          payload: |
-            {
-              "channel": "go-project-gha",
-              "text": "📦 Docker job started for branch: ${{ github.ref_name }}."
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-
-      # Checkout Code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Docker Login
-      - name: Docker login
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Build Docker Image
-      - name: Build Docker image
+      - name: Read version from VERSION file
+        id: read_version
         run: |
-          docker build -t manisankardivi/new:latest .
+          if [ -f VERSION ]; then
+            VERSION=$(cat VERSION | xargs)
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+          else
+            echo "VERSION file not found!"
+            exit 1
+          fi
 
-      # Push Docker Image
-      - name: Push Docker Image
+      - name: Build and push Docker image
+        run: |
+          docker build -t manisankardivi/new:${{ env.VERSION }} .
+
+      - name: Push Docker Image (main branch only)
         if: github.ref == 'refs/heads/main'
         run: |
-          docker push manisankardivi/new:latest
+          docker push manisankardivi/new:${{ env.VERSION }}
 
-      # Notify Slack: Docker Job Success
-      - name: Notify Slack - Docker Job Successful
-        if: success()
+      # Slack Notification for Success
+      - name: Notify Slack on Success
+        if: ${{ success() }}
         uses: slackapi/slack-github-action@v2.0.0
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: |
-            {
-              "channel": "go-project-gha",
-              "text": "✅ Docker job completed successfully for branch: ${{ github.ref_name }}."
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+            text: "*Docker image pushed successfully!* :tada:
+            Commit: ${{ github.sha }}
+            URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
 
-      # Notify Slack: Docker Job Failure
-      - name: Notify Slack - Docker Job Failed
-        if: failure()
+      # Slack Notification for Failure
+      - name: Notify Slack on Failure
+        if: ${{ failure() }}
         uses: slackapi/slack-github-action@v2.0.0
         with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: |
-            {
-              "channel": "go-project-gha",
-              "text": "❌ Docker job failed for branch: ${{ github.ref_name }}.\nWorkflow: ${{ github.workflow }}."
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+            text: "*Docker image push failed!* :x:
+            Commit: ${{ github.sha }}
+            URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+
+  k8s-manifest-files_update:
+    runs-on: ubuntu-latest
+    needs: docker_build_push
+    if: github.ref == 'refs/heads/main' # Only run this job if the branch is 'main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Read version from VERSION file
+        run: |
+          VERSION=$(cat VERSION)
+          echo "Version extracted: $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Checkout Kubernetes repo
+        run: |
+          git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
+          cd k8s_repo
+          sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:$VERSION|" manifest.yaml
+          echo "Image Section:"
+          grep "image: manisankardivi/new:" manifest.yaml
+
+      - name: Check for changes and commit if updated
+        run: |
+          cd k8s_repo
+          git config --global user.email "manisankardiv@gmail.com"
+          git config --global user.name "manisankardivi"
+          git add .
+          if git diff --cached --exit-code --quiet; then
+            echo "No changes detected in manifest.yaml. Skipping commit and branch creation."
+            echo "SKIP_BRANCH=true" >> $GITHUB_ENV
+          else
+            echo "Changes detected. Committing changes."
+            git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
+            echo "SKIP_BRANCH=false" >> $GITHUB_ENV
+          fi
+
+      - name: Create and push new branch with version (if changes exist)
+        if: env.SKIP_BRANCH == 'false' # Only run if changes exist
+        run: |
+          cd k8s_repo
+          NEW_BRANCH="release-v$VERSION"
+          git checkout -b "$NEW_BRANCH"
+          git push origin "$NEW_BRANCH"
+          echo "Branch $NEW_BRANCH created and pushed successfully."
+
+      # Slack Notification for Success
+      - name: Notify Slack on Success
+        if: ${{ success() }}
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "*Kubernetes manifest update completed successfully!* :tada:
+            Commit: ${{ github.sha }}
+            URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
+
+      # Slack Notification for Failure
+      - name: Notify Slack on Failure
+        if: ${{ failure() }}
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "*Kubernetes manifest update failed!* :x:
+            Commit: ${{ github.sha }}
+            URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
