@@ -40,7 +40,7 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text:  "🚀 Test job completed successfully!: ${{ github.ref_name }}."
+            text:  "🚀 Test job ompleted successfully!* :tada:
             Commit: ${{ github.sha }}
             URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
 
@@ -52,7 +52,7 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "*Test job failed!* :x:
+            text:  "❌ Test job failed for branch :x:
             Commit: ${{ github.sha }}
             URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}"
 
