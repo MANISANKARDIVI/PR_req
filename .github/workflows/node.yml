@@ -4,11 +4,15 @@ on:
   push:
     branches:
       - main
-      - devops
-
+    paths:
+      - '.github/workflows/node.yml'
+      - 'node-test/**'
   pull_request:
     branches:
-      - development
+      - dev
+    paths:
+      - '.github/workflows/node.yml'
+      - 'node-test/**'
 
 jobs:
   Code-Build:
