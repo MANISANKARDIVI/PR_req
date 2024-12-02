@@ -1,4 +1,4 @@
-# Go service CI Pipeline Workflow Overview  ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
+# Go service CI Pipeline Workflow Overview  !(https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
 
 ## CI Pipeline Workflow
 
