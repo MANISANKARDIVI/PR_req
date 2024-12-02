@@ -77,7 +77,6 @@ jobs:
           fi
       - name: Build and push Docker image
         run: |
-          cd go-test
-          docker build -t manisankardivi/node:${{ env.VERSION }} .
-          docker push manisankardivi/node:${{ env.VERSION }}
-
+          cd node-test
+          docker build -t manisankardivi/node-test:${{ env.VERSION }} .
+          docker push manisankardivi/node-test:${{ env.VERSION }}
