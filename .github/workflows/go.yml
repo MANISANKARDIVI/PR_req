@@ -38,16 +38,6 @@ jobs:
           cd go-test
           go mod tidy
 
-      - name: Restore Go cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('go-test/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
       - name: Run tests
         run: |
           cd go-test
