@@ -1,0 +1,21 @@
+{
+  "name": "my-node-app",
+  "version": "1.0.0",
+  "description": "A sample Node.js application",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jest",
+    "build": "mkdir -p dist && rsync -av --exclude='dist' ./ dist/",
+    "start": "node ./index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.1",
+    "my-node-app": "file:"
+  },
+  "author": "sou",
+  "license": "MIT",
+  "keywords": [],
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
