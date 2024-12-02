@@ -1,8 +1,5 @@
 # Go service CI Pipeline Workflow Overview  ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
 
-## Overview
-This documentation describes the CI pipeline for the Go service, including its structure and configuration for continuous integration and deployment using GitHub Actions.
-
 ## CI Pipeline Workflow
 
 The CI pipeline includes the following steps:
