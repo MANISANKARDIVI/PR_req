@@ -56,7 +56,6 @@ jobs:
       - name: Checking artifact
         run: |
           ls -la
-          tree dist
 
   docker_build_push:
     runs-on: ubuntu-latest
