@@ -23,13 +23,11 @@ jobs:
 
       - name: Install dependencies
         run: |
+          cd go-test
           go mod tidy  # Ensure the go.mod and go.sum files are up-to-date
           go get -v ./...
-      - name: Install the application
-        run: go install ./...
-
-      - name: Run tests
-        run: go test -v ./... || exit 1  # Fail the job if tests fail
+          go install ./...
+          go test -v ./... || exit 1  # Fail the job if tests fail
 
   build:
     runs-on: ubuntu-latest
