@@ -29,9 +29,13 @@ jobs:
           go mod tidy
           go get -v ./...
       - name: Install the application
-        run: go install ./...
+        run: |
+          cd go-test
+          go install ./...
       - name: Run tests
-        run: go test -v ./... || exit 1
+        run: |
+          cd go-test
+          go test -v ./... || exit 1
 
   build:
     runs-on: ubuntu-latest
