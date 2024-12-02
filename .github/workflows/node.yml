@@ -32,10 +32,14 @@ jobs:
 
       # Step 3: Install dependencies and build code
       - name: Install dependencies
-        run: npm install
+        run: |
+          cd node-test
+          npm install
 
       - name: Build code
-        run: npm run build
+        run: |
+          cd node-test
+          npm run build
 
       # Step 4: Save the build output as an artifact
       - name: Upload build artifact
