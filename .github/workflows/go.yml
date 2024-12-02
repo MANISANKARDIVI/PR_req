@@ -1,11 +1,17 @@
-name: CI Pipeline
+name: Go - CI Pipeline
 on:
   push:
     branches:
       - main
+    paths:
+      - '.github/workflows/go.yml'
+      - 'go-test/**'
   pull_request:
     branches:
       - dev
+    paths:
+      - '.github/workflows/go.yml'
+      - 'go-test/**'
 
 jobs:
   test:
