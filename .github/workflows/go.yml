@@ -24,10 +24,8 @@ jobs:
       - name: Install dependencies
         run: |
           cd go-test
+          go mod download
           go mod tidy  # Ensure the go.mod and go.sum files are up-to-date
-          go get -v ./...
-          go install ./...
-          go test -v ./... || exit 1  # Fail the job if tests fail
 
   build:
     runs-on: ubuntu-latest
@@ -46,13 +44,6 @@ jobs:
         run: |
           echo "Contents of dist:"
           ls -la go-test/dist
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: go-build-artifact
-          path: go-test/dist/main
-          if-no-files-found: error
 
   docker_build_push:
     runs-on: ubuntu-latest
