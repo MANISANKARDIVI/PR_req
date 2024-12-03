@@ -110,9 +110,3 @@ jobs:
             git commit -m "Updated manifest.yaml with version ${{ env.VERSION }}"
             git push origin main
           fi
-
-# with cache build no: 1
-# with cache build no: 2
-# with cache build no: 3
-# with cache build no: 4
-# with cache build no: 5
