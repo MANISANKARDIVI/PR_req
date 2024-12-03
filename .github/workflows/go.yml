@@ -5,14 +5,14 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/go.yml'
-      - 'go-test/**'
+      - ".github/workflows/go.yml"
+      - "go-test/**"
   pull_request:
     branches:
       - dev
     paths:
-      - '.github/workflows/go.yml'
-      - 'go-test/**'
+      - ".github/workflows/go.yml"
+      - "go-test/**"
 
 jobs:
   test:
@@ -20,14 +20,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-         
-      - name: Go configure
+
+      - name: Set up Go Version
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23.2'
+          go-version: "1.23.2"
           check-latest: true
-          cache-dependency-path: 'go-test/go.sum'
-                  
+          cache-dependency-path: "go-test/go.sum"
+
       - name: Install dependencies
         run: |
           cd go-test
@@ -45,7 +45,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Build the application
         run: |
           cd go-test
@@ -110,4 +110,6 @@ jobs:
             git commit -m "Updated manifest.yaml with version ${{ env.VERSION }}"
             git push origin main
           fi
+
 # with cache build no: 1
+# with cache build no: 2
