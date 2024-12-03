@@ -114,7 +114,7 @@ jobs:
       - name: Checkout Kubernetes repo
         run: |
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
-          cd k8s_repo
+          cd k8s_repo/go-k8s
           sed -i "s|image: manisankardivi/go-test:.*|image: manisankardivi/go-test:${{ env.VERSION }}|" manifest.yaml
           echo "Updated manifest.yaml:"
           grep "image: manisankardivi/go-test:" manifest.yaml
