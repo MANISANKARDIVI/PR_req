@@ -38,7 +38,7 @@ jobs:
         run: |
           cd go-test
           mkdir -p dist
-          go build -v -o dist/main ./...
+          CGO_ENABLED=1 go build -v -o dist/main ./...
 
       - name: Debug build output
         run: |
