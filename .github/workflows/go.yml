@@ -69,9 +69,9 @@ jobs:
       #   uses: digitalocean/action-doctl@v2
       #   with:
       #     token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}  # create secret for Digital-Ocean token
-      
+
       # - name: Build container image
-      # # create secret for Digital-Ocean Registry Name 
+      # # create secret for Digital-Ocean Registry Name
       #   run: docker build -t ${{ secrets.REGISTRY_NAME }}/go:$VERSION .
 
       # # Image push to Digital-Ocean Registry
@@ -115,9 +115,9 @@ jobs:
         run: |
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
           cd k8s_repo
-          sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:${{ env.VERSION }}|" manifest.yaml
+          sed -i "s|image: manisankardivi/go-test:.*|image: manisankardivi/go-test:${{ env.VERSION }}|" manifest.yaml
           echo "Updated manifest.yaml:"
-          grep "image: manisankardivi/new:" manifest.yaml
+          grep "image: manisankardivi/go-test:" manifest.yaml
 
       - name: Commit and push changes
         run: |
