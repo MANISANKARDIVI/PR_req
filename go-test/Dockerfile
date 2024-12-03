@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go application with static linking
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o myapp main.go
+RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o myapp main.go
 
 # Final Stage
 FROM scratch
