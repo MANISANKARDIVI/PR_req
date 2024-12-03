@@ -1,3 +1,4 @@
+# GO pipeline
 name: Go - CI Pipeline
 
 on:
