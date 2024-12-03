@@ -111,8 +111,4 @@ jobs:
             git push origin main
           fi
 
-# without cache build no: 1
-# without cache build no: 2
-# without cache build no: 3
-# without cache build no: 4
-# without cache build no: 5
+# with cache build no: 1
