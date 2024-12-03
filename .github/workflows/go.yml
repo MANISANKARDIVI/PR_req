@@ -25,8 +25,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.23.2"
-          # check-latest: true
-          # cache-dependency-path: "go-test/go.sum"
+          check-latest: true
+          cache-dependency-path: "go-test/go.sum"
 
       - name: Install dependencies
         run: |
