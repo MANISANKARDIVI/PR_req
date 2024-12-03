@@ -76,4 +76,9 @@ jobs:
         run: |
           cd node-test
           docker build -t manisankardivi/node-test:${{ env.VERSION }} .
-          docker push manisankardivi/node-test:${{ env.VERSION }}
+
+      - name: Push Docker Image (main branch only)
+        if: github.ref == 'refs/heads/main'
+        run: |
+            echo "Pushing Docker image to the registry..."
+            docker push manisankardivi/node-test:${{ env.VERSION }}

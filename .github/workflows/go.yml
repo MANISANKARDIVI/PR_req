@@ -63,6 +63,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      # Install doctl.
+      # - name: Install doctl
+      #   uses: digitalocean/action-doctl@v2
+      #   with:
+      #     token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}  # create secret for Digital-Ocean token
+      
+      # - name: Build container image
+      # # create secret for Digital-Ocean Registry Name 
+      #   run: docker build -t ${{ secrets.REGISTRY_NAME }}/go:$VERSION .
+
+      # # Image push to Digital-Ocean Registry
+      # - name: Push image to Digital-Ocean Container Registry
+      #   run: docker push ${{ secrets.REGISTRY_NAME }}/go:$VERSION
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Docker login
@@ -83,8 +98,13 @@ jobs:
       - name: Build and push Docker image
         run: |
           cd go-test
-          docker build -t manisankardivi/new:${{ env.VERSION }} .
-          docker push manisankardivi/new:${{ env.VERSION }}
+          docker build -t manisankardivi/go-test:${{ env.VERSION }} .
+
+      - name: Push Docker Image (main branch only)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "Pushing Docker image to the registry..."
+          docker push manisankardivi/go-test:${{ env.VERSION }}
 
   k8s-manifest-files_update:
     runs-on: ubuntu-latest
@@ -98,6 +118,7 @@ jobs:
           sed -i "s|image: manisankardivi/new:.*|image: manisankardivi/new:${{ env.VERSION }}|" manifest.yaml
           echo "Updated manifest.yaml:"
           grep "image: manisankardivi/new:" manifest.yaml
+
       - name: Commit and push changes
         run: |
           cd k8s_repo
