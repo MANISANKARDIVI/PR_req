@@ -118,6 +118,7 @@ jobs:
           sed -i "s|image: manisankardivi/go-test:.*|image: manisankardivi/go-test:${{ env.VERSION }}|" manifest.yaml
           echo "Updated manifest.yaml:"
           grep "image: manisankardivi/go-test:" manifest.yaml
+          cat manifest.yaml
 
       - name: Commit and push changes
         run: |
