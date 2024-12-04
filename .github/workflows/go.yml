@@ -133,11 +133,11 @@ jobs:
           cd k8s_repo/go-k8s
           echo "Using version: $VERSION"
           echo "Updating image version in manifest.yaml..."
-          sed -i "s|image: manisankardivi/go-test:.*|image: manisankardivi/go-test:$VERSION|" manifest.yaml
+          sed -i "s|manisankardivi/go-test:.*|manisankardivi/go-test:$VERSION|" manifest.yaml
           # sed -i "s|\$VERSION|$VERSION|" manifest.yaml
           echo "Image Section after update:"
           cat manifest.yaml
-          grep "image: manisankardivi/go-test:" manifest.yaml
+          grep "image: manisankardivi/go-test:*" manifest.yaml
 
       - name: Check for changes and commit if updated
         run: |
