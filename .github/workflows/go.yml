@@ -117,6 +117,8 @@ jobs:
       - name: Read version from VERSION file
         run: |
           # Read the version from the VERSION file
+          la -la
+          cd go-test
           VERSION=$(cat VERSION)
           echo "Version extracted: $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV  # Save version to environment variable
