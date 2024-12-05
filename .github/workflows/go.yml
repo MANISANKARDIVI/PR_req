@@ -159,6 +159,8 @@ jobs:
         run: |
           cd k8s_repo/go-k8s
           ls -la
+          git pull
+          git branch
           NEW_BRANCH="release-v$VERSION"
           echo "Creating new branch $NEW_BRANCH..."
           git checkout -b "$NEW_BRANCH"
