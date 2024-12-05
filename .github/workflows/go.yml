@@ -120,8 +120,8 @@ jobs:
           echo "Listing files in the repository root:"
           ls -la
           echo "Navigating to go-test directory:"
-          ls -la go-test
           cd go-test
+          ls -la
           VERSION=$(cat VERSION)
           echo "Version extracted: $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV  # Save version to environment variable
@@ -156,6 +156,9 @@ jobs:
       - name: Create and push new branch with version (if changes exist)
         if: env.SKIP_BRANCH == 'false' # Only run if changes exist
         run: |
+          ls -la
+          git branch
+          cd k8s_repo
           ls -la
           NEW_BRANCH="release-v$VERSION"
           echo "Creating new branch $NEW_BRANCH..."
