@@ -156,7 +156,7 @@ jobs:
       - name: Create and push new branch with version (if changes exist)
         if: env.SKIP_BRANCH == 'false' # Only run if changes exist
         run: |
-          cd k8s_repo
+          ls -la
           NEW_BRANCH="release-v$VERSION"
           echo "Creating new branch $NEW_BRANCH..."
           git checkout -b "$NEW_BRANCH"
