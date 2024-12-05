@@ -95,11 +95,13 @@ jobs:
             echo "VERSION file not found!"
             exit 1
           fi
+          ls -la
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           push: false
-          tags: manisankardivi/go-test:${{ env.VERSION }}
+          file: go-test/Dockerfile
+          tags: manisankardivi/go-test:${{ env.VERSION }} .
           cache-from: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }}
           cache-to: type=inline
           
