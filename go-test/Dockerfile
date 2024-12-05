@@ -1,4 +1,4 @@
-# Build Stage
+## Build Stage
 FROM golang:latest AS builder
 
 # Set the working directory
