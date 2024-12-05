@@ -96,14 +96,16 @@ jobs:
             exit 1
           fi
           ls -la
-      - name: Build and push
+
+      - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          push: false
+          context: .
           file: go-test/Dockerfile
-          tags: manisankardivi/go-test:${{ env.VERSION }} .
-          cache-from: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }}
-          cache-to: type=inline
+          push: false
+          tags: docker.io/manisankardivi/go-test:${{ env.VERSION }}
+          cache-from: type=registry,ref=docker.io/manisankardivi/go-test:${{ env.VERSION }}
+          cache-to: type=registry,ref=docker.io/manisankardivi/go-test:build-cache,mode=max
           
       - name: Push Docker Image (main branch only)
         if: github.ref == 'refs/heads/main'
