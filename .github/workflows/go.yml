@@ -141,6 +141,7 @@ jobs:
       - name: Check for changes and commit if updated
         run: |
           cd k8s_repo/go-k8s
+          ls -la
           git config --global user.email "manisankardivi@gmail.com"
           git config --global user.name "manisankardivi"
           git add manifest.yaml
@@ -152,7 +153,7 @@ jobs:
             git commit -m "Updated manifest.yaml with version $VERSION | GitHub Actions Pipeline"
             echo "SKIP_BRANCH=false" >> $GITHUB_ENV
           fi
-
+          
       - name: Create and push new branch with version (if changes exist)
         if: env.SKIP_BRANCH == 'false' # Only run if changes exist
         run: |
