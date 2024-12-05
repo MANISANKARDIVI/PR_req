@@ -16,7 +16,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
           go test -v ./...
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: test
     steps:
       - name: Checkout code
@@ -58,7 +58,7 @@ jobs:
           ls -la go-test/dist
 
   docker_build_push:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - name: Checkout code
@@ -107,7 +107,7 @@ jobs:
           docker push manisankardivi/go-test:${{ env.VERSION }}
 
   k8s-manifest-files_update:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: docker_build_push
     if: github.ref == 'refs/heads/main'
 
