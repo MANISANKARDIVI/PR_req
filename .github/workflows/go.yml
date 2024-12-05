@@ -140,6 +140,7 @@ jobs:
 
       - name: Check for changes and commit if updated
         run: |
+          ls -la
           cd k8s_repo/go-k8s
           ls -la
           git config --global user.email "manisankardivi@gmail.com"
