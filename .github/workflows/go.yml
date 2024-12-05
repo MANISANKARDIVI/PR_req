@@ -110,6 +110,7 @@ jobs:
       - name: Push Docker Image (main branch only)
         if: github.ref == 'refs/heads/main'
         run: |
+          docker images
           echo "Pushing Docker image to the registry..."
           docker push manisankardivi/go-test:${{ env.VERSION }}
 
