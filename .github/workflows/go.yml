@@ -101,7 +101,7 @@ jobs:
           push: false
           tags: manisankardivi/go-test:${{ env.VERSION }}
           cache-from: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }}
-          cache-to: type=inlin
+          cache-to: type=inline
           
       - name: Push Docker Image (main branch only)
         if: github.ref == 'refs/heads/main'
