@@ -95,17 +95,21 @@ jobs:
             echo "VERSION file not found!"
             exit 1
           fi
-      - name: Build and push Docker image
-        run: |
-          cd go-test
-          docker build -t manisankardivi/go-test:${{ env.VERSION }} .
-
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          tags: manisankardivi/go-test:${{ env.VERSION }}
+          cache-from: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }}
+          cache-to: type=inlin
+          
       - name: Push Docker Image (main branch only)
         if: github.ref == 'refs/heads/main'
         run: |
           echo "Pushing Docker image to the registry..."
           docker push manisankardivi/go-test:${{ env.VERSION }}
 
+      
   k8s-manifest-files_update:
     runs-on: ubuntu-24.04
     needs: docker_build_push
