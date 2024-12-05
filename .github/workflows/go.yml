@@ -100,7 +100,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: go-test
           file: go-test/Dockerfile
           push: false
           tags: docker.io/manisankardivi/go-test:${{ env.VERSION }}
