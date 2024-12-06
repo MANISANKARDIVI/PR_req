@@ -58,11 +58,44 @@ jobs:
           ls -la go-test/dist
 
   docker_build_push:
-    runs-on: ubuntu-24.04
-    needs: build
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache register
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ hashFiles('**/Dockerfile') }}
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Read version from VERSION file
+        id: read_version
+        run: |
+          VERSION=$(cat go-test/VERSION | xargs)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: go-test
+          file: go-test/Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/go-test:${{ env.VERSION }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+      
 
       # Install doctl.
       # - name: Install doctl
@@ -78,34 +111,34 @@ jobs:
       # - name: Push image to Digital-Ocean Container Registry
       #   run: docker push ${{ secrets.REGISTRY_NAME }}/go:$VERSION
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Docker login
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Read version from VERSION file
-        id: read_version
-        run: |
-          if [ -f go-test/VERSION ]; then
-            VERSION=$(cat go-test/VERSION | xargs)
-            echo "VERSION=$VERSION" >> $GITHUB_ENV
-          else
-            echo "VERSION file not found!"
-            exit 1
-          fi
-          ls -la
-      - name: Build Docker image
-        uses: docker/build-push-action@v2
-        with:
-          file: go-test/Dockerfile
-          context: go-test
-          builder: ${{ steps.buildx.outputs.name }}  # Reference Buildx instance
-          push: true  # Push the image to the registry
-          tags: docker.io/manisankardivi/go-test:${{ env.VERSION }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v3
+      # - name: Docker login
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # - name: Read version from VERSION file
+      #   id: read_version
+      #   run: |
+      #     if [ -f go-test/VERSION ]; then
+      #       VERSION=$(cat go-test/VERSION | xargs)
+      #       echo "VERSION=$VERSION" >> $GITHUB_ENV
+      #     else
+      #       echo "VERSION file not found!"
+      #       exit 1
+      #     fi
+      #     ls -la
+      # - name: Build Docker image
+      #   uses: docker/build-push-action@v2
+      #   with:
+      #     file: go-test/Dockerfile
+      #     context: go-test
+      #     builder: ${{ steps.buildx.outputs.name }}  # Reference Buildx instance
+      #     push: true  # Push the image to the registry
+      #     tags: docker.io/manisankardivi/go-test:${{ env.VERSION }}
+      #     cache-from: type=local,src=/tmp/.buildx-cache
+      #     cache-to: type=local,dest=/tmp/.buildx-cache
           
       # - name: Build and push Docker image
       #   uses: docker/build-push-action@v6
