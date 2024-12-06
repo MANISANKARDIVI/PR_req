@@ -86,6 +86,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
+          file: go-test/Dockerfile
           tags: docker.io/manisankardivi/go-test:${{ env.VERSION }}
           cache-from: type=registry,ref=docker.io/manisankardivi/go-test:${{ env.VERSION }}
           cache-to: type=inline
