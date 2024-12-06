@@ -80,25 +80,26 @@ jobs:
           VERSION=$(cat go-test/VERSION | xargs)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      # Cache Docker layers
-      - name: Cache Docker layers
-        uses: actions/cache@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and push
+        uses: docker/build-push-action@v6
         with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
-      # Build and Push Docker Image
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: go-test/Dockerfile
           push: true
           tags: docker.io/manisankardivi/go-test:${{ env.VERSION }}
-          cache-from: type=gha
-          cache-to: type=gha
+          cache-from: type=registry,ref=docker.io/manisankardivi/go-test:${{ env.VERSION }}
+          cache-to: type=inline
+
+      # # Build and Push Docker Image
+      # - name: Build and push Docker image
+      #   uses: docker/build-push-action@v2
+      #   with:
+      #     context: .
+      #     file: go-test/Dockerfile
+      #     push: true
+      #     tags: docker.io/manisankardivi/go-test:${{ env.VERSION }}
+      #     cache-from: type=gha
+      #     cache-to: type=gha
 
       # Install doctl.
       # - name: Install doctl
