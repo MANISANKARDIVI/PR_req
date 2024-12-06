@@ -35,7 +35,7 @@ RUN apt-get update && apt-get install -y gcc libc6-dev
 WORKDIR /app
 
 # Copy go.mod and go.sum files first to leverage caching
-COPY go.mod go.sum ./
+COPY go-test/go.mod go-test/go.sum ./
 
 # Download dependencies
 RUN go mod download
