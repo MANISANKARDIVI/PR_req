@@ -34,7 +34,8 @@ FROM golang:latest AS builder
 WORKDIR /app
 
 # Copy go.mod and go.sum files first to leverage caching
-COPY go.mod go.sum ./
+COPY go-test/go.mod ./
+COPY go-test/go.sum ./
 
 # Download dependencies
 RUN go mod tidy
