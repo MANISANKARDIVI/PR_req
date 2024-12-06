@@ -96,11 +96,9 @@ jobs:
           context: .
           file: go-test/Dockerfile
           push: true
-          tags: |
-            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-            ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+          tags: docker.io/manisankardivi/go-test:${{ env.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha
 
       # Install doctl.
       # - name: Install doctl
