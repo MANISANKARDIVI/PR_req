@@ -96,16 +96,26 @@ jobs:
             exit 1
           fi
           ls -la
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+      - name: Build Docker image
+        uses: docker/build-push-action@v2
         with:
-          context: go-test
-          file: go-test/Dockerfile
-          push: true
+          context: ./  # Path to the build context
+          file: ./Dockerfile  # Path to the Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}  # Reference Buildx instance
+          push: true  # Push the image to the registry
           tags: docker.io/manisankardivi/go-test:${{ env.VERSION }}
-          cache-from: type=registry,ref=docker.io/manisankardivi/go-test:${{ env.VERSION }}
-          cache-to: type=registry,ref=docker.io/manisankardivi/go-test:${{ env.VERSION }},mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          
+      # - name: Build and push Docker image
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     context: go-test
+      #     file: go-test/Dockerfile
+      #     push: true
+      #     tags: docker.io/manisankardivi/go-test:${{ env.VERSION }}
+      #     cache-from: type=registry,ref=docker.io/manisankardivi/go-test:${{ env.VERSION }}
+      #     cache-to: type=registry,ref=docker.io/manisankardivi/go-test:${{ env.VERSION }},mode=max
           
       # - name: Push Docker Image (main branch only)
       #   if: github.ref == 'refs/heads/main'
