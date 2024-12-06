@@ -25,7 +25,6 @@
 
 # # Command to run the application
 # CMD ["/myapp"]
-# Build Stage
 
 # Build Stage
 FROM golang:latest AS builder
