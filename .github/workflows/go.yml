@@ -86,8 +86,10 @@ jobs:
           file: go-test/Dockerfile
           push: true
           tags: manisankardivi/go-test:${{ env.VERSION }}
-          cache-from: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }}
-          cache-to: type=inline
+          # cache-from: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }}
+          # cache-to: type=inline
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
       
   k8s-manifest-files_update:
     runs-on: ubuntu-24.04
