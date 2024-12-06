@@ -28,14 +28,13 @@
 # Build Stage
 
 # Build Stage
-FROM golang:1.23.2 AS builder
+FROM golang:latest AS builder
 
 # Set the working directory
 WORKDIR /app
 
 # Copy go.mod and go.sum files first to leverage caching
-COPY go-test/go.mod ./
-COPY go-test/go.sum ./
+COPY go.mod go.sum ./
 
 # Download dependencies
 RUN go mod download
@@ -44,7 +43,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go application with static linking
-RUN CGO_ENABLED=0 GOOS=linux go build -a -o myapp main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o myapp main.go
 
 # Final Stage
 FROM scratch
