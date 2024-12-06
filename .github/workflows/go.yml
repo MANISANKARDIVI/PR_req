@@ -99,8 +99,8 @@ jobs:
       - name: Build Docker image
         uses: docker/build-push-action@v2
         with:
-          context: ./  # Path to the build context
-          file: ./Dockerfile  # Path to the Dockerfile
+          file: go-test/Dockerfile
+          context: go-test
           builder: ${{ steps.buildx.outputs.name }}  # Reference Buildx instance
           push: true  # Push the image to the registry
           tags: docker.io/manisankardivi/go-test:${{ env.VERSION }}
