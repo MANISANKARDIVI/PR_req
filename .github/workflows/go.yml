@@ -74,8 +74,9 @@ jobs:
           file: go-test/Dockerfile
           push: true
           tags: manisankardivi/go-test:${{ env.VERSION }}
-          cache-from: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }}
-          cache-to: type=inline
+          cache-from: type=registry,ref=manisankardivi/go-test:buildcache
+          cache-to: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }},mode=max
+          
   k8s-manifest-files_update:
     runs-on: ubuntu-24.04
     needs: docker_build_push
