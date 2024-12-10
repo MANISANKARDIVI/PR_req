@@ -27,7 +27,7 @@
 # CMD ["/myapp"]
 
 # Build Stage
-FROM golang:latest AS builder
+FROM golang:1.23.2 AS builder
 
 # Set the working directory
 WORKDIR /app
