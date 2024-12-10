@@ -1,4 +1,3 @@
----
 name: Go - CI Pipeline
 on:
   push:
@@ -40,11 +39,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        
       - name: Build the application
         run: |
           cd go-test
           mkdir -p dist
           CGO_ENABLED=1 go build -v -o dist/main ./...
+          
       - name: Debug build output
         run: |
           echo "Contents of dist:"
@@ -71,6 +72,15 @@ jobs:
           
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-multi-buildx
         
       - name: Build and push
         uses: docker/build-push-action@v6
