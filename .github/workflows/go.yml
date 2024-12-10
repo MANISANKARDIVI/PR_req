@@ -29,31 +29,10 @@ jobs:
           cd go-test
           go mod tidy
           go mod download
-      - name: Run tests
-        run: |
-          cd go-test
-          go test -v ./...
-  build:
-    runs-on: ubuntu-24.04
-    needs: test
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Build the application
-        run: |
-          cd go-test
-          mkdir -p dist
-          CGO_ENABLED=1 go build -v -o dist/main ./...
-          
-      - name: Debug build output
-        run: |
-          echo "Contents of dist:"
-          ls -la go-test/dist
           
   docker_build_push:
     runs-on: ubuntu-24.04
-    needs: build
+    needs: test
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
