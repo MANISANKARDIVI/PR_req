@@ -50,7 +50,7 @@ func main() {
 	http.HandleFunc("/info", infoHandler)
 	http.HandleFunc("/error", errorHandler)
 
-	fmt.Println("Server is running on http://localhost:7070")
+	fmt.Println("Server is running on http://localhost:8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}
