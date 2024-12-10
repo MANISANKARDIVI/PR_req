@@ -78,7 +78,7 @@ jobs:
           file: go-test/Dockerfile
           push: true
           tags: manisankardivi/go-test:${{ env.VERSION }}
-          cache-from: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }}
+          cache-from: type=registry,ref=manisankardivi/go-test:77.111.77      # make sure enter here previous image tag 
           cache-to: type=inline
           
           
