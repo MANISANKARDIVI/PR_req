@@ -27,6 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd go-test
+          ls
           go mod tidy
           go mod download
           
