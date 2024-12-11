@@ -53,7 +53,20 @@ jobs:
   
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-  
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: go-test
+          file: go-test/Dockerfile
+          push: true
+          tags: manisankardivi/go-test:${{ env.VERSION }}
+          cache-from: |
+            type=inline
+            type=registry,ref=manisankardivi/go-test:77.444.77
+          cache-to: |
+            type=inline
+            type=registry,ref=manisankardivi/go-test:${{ env.VERSION }},mode=max
       # - name: Build and push
       #   uses: docker/build-push-action@v6
       #   with:
@@ -75,15 +88,15 @@ jobs:
       #     cache-to: type=inline
 
       
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: go-test
-          file: go-test/Dockerfile
-          push: true
-          tags: manisankardivi/go-test:${{ env.VERSION }}
-          cache-from: type=registry,ref=manisankardivi/go-test:77.444.77
-          cache-to: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }},mode=max
+      # - name: Build and push
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     context: go-test
+      #     file: go-test/Dockerfile
+      #     push: true
+      #     tags: manisankardivi/go-test:${{ env.VERSION }}
+      #     cache-from: type=registry,ref=manisankardivi/go-test:77.444.77
+      #     cache-to: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }},mode=max
           
   k8s-manifest-files_update:
     runs-on: ubuntu-24.04
