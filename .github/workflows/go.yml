@@ -137,8 +137,6 @@ jobs:
 
           cd k8s_repo/go-k8s
 
-          ls -la
-
           git config --global user.email "manisankardivi@gmail.com"
 
           git config --global user.name "manisankardivi"
