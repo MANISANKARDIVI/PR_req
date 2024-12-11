@@ -42,7 +42,7 @@ func errorHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	log.WithFields(log.Fields{
 		"animal": "walrus",
-		"size":   10,
+		"size":   11,
 	}).Info("A group of walrus emerges from the ocean")
 
 	// Setting up handlers
