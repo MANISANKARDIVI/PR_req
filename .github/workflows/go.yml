@@ -53,41 +53,17 @@ jobs:
   
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
-      # - name: Build and push
-      #   uses: docker/build-push-action@v6
-      #   with:
-      #     context: go-test
-      #     file: go-test/Dockerfile
-      #     push: true
-      #     tags: manisankardivi/go-test:${{ env.VERSION }}
-      #     cache-from: |
-      #       type=inline
-      #       type=registry,ref=manisankardivi/go-test:77.444.77
-      #     cache-to: |
-      #       type=inline
-      #       type=registry,ref=manisankardivi/go-test:${{ env.VERSION }},mode=max
-      # # - name: Build and push
-      # #   uses: docker/build-push-action@v6
-      # #   with:
-      # #     context: go-test
-      # #     file: go-test/Dockerfile
-      # #     push: true
-      # #     tags: manisankardivi/go-test:${{ env.VERSION }}
-      # #     cache-from: type=gha
-      # #     cache-to: type=gha,mode=max
-      
-      # # - name: Build and push
-      # #   uses: docker/build-push-action@v6
-      # #   with:
-      # #     context: go-test
-      # #     file: go-test/Dockerfile
-      # #     push: true
-      # #     tags: manisankardivi/go-test:${{ env.VERSION }}
-      # #     cache-from: type=registry,ref=manisankardivi/go-test:77.111.77      # make sure enter here previous image tag 
-      # #     cache-to: type=inline
-
-      
+  
+      - name: Get previous tag
+        id: get_previous_tag
+        run: |
+          IMAGE_NAME=manisankardivi/go-test
+          PREVIOUS_TAG=$(curl -s -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" \
+            "https://registry.hub.docker.com/v2/repositories/${IMAGE_NAME}/tags" | \
+            jq -r '.results[].name' | sort -V | tail -n 1)
+          echo "PREVIOUS_TAG=$PREVIOUS_TAG"
+          echo "PREVIOUS_TAG=$PREVIOUS_TAG" >> $GITHUB_ENV
+  
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -95,9 +71,9 @@ jobs:
           file: go-test/Dockerfile
           push: true
           tags: manisankardivi/go-test:${{ env.VERSION }}
-          cache-from: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }}
+          cache-from: type=registry,ref=manisankardivi/go-test:${{ env.PREVIOUS_TAG }}
           cache-to: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }},mode=max
-          
+            
   k8s-manifest-files_update:
     runs-on: ubuntu-24.04
     needs: docker_build_push
