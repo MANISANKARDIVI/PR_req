@@ -70,15 +70,24 @@ jobs:
           echo "PREVIOUS_TAG=$PREVIOUS_TAG"
           echo "PREVIOUS_TAG=$PREVIOUS_TAG" >> $GITHUB_ENV
           
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: go-test
-          file: go-test/Dockerfile
-          push: ${{ github.ref == 'refs/heads/main' }}  # Only push if it's the 'main' branch.
-          tags: manisankardivi/go-test:${{ env.VERSION }}
-          cache-from: type=registry,ref=manisankardivi/go-test:${{ env.PREVIOUS_TAG }}
-          cache-to: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }},mode=max
+      # - name: Build and push
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     context: go-test
+      #     file: go-test/Dockerfile
+      #     push: ${{ github.ref == 'refs/heads/main' }}  # Only push if it's the 'main' branch.
+      #     tags: manisankardivi/go-test:${{ env.VERSION }}
+      #     cache-from: type=registry,ref=manisankardivi/go-test:${{ env.PREVIOUS_TAG }}
+      #     cache-to: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }},mode=max
+      - name: Build and push (only on main branch)
+        run: |
+          if [ "${GITHUB_REF}" == "refs/heads/main" ]; then
+            docker buildx build --push -t manisankardivi/go-test:${{ env.VERSION }} \
+              --cache-to type=inline \
+              --cache-from type=registry,ref=manisankardivi/go-test:${{ env.PREVIOUS_TAG }} .
+          else
+            echo "Skipping push for non-main branch."
+          fi   
           
       - name: view images
         run: docker images
