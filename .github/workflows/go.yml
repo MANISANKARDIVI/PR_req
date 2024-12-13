@@ -74,7 +74,7 @@ jobs:
         with:
           context: go-test
           file: go-test/Dockerfile
-          push: ${{ github.ref == 'refs/heads/main' }}  # Only push if it's the 'main' branch
+          push: ${{ github.ref == 'refs/heads/main' }}  # Only push if it's the 'main' branch.
           tags: manisankardivi/go-test:${{ env.VERSION }}
           cache-from: type=registry,ref=manisankardivi/go-test:${{ env.PREVIOUS_TAG }}
           cache-to: type=registry,ref=manisankardivi/go-test:${{ env.VERSION }},mode=max
