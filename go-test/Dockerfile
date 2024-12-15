@@ -34,9 +34,7 @@ WORKDIR /app
 
 # Copy go.mod and go.sum files first to leverage caching
 COPY go.mod go.sum ./
-
-# Download dependencies
-RUN go mod download
+RUN go mod download && go mod verify
 
 # Copy the rest of the application code
 COPY . .
