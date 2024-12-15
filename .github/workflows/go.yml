@@ -77,7 +77,7 @@ jobs:
         with:
           context: go-test
           file: go-test/Dockerfile
-          push: false
+          load: true
           tags: manisankardivi/go-test:${{ env.VERSION }}
           cache-from: type=registry,ref=manisankardivi/go-test:${{ env.PREVIOUS_TAG }}
           cache-to: type=inline
