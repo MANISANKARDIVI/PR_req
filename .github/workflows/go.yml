@@ -82,7 +82,7 @@ jobs:
       #     cache-from: type=registry,ref=manisankardivi/go-test:${{ env.PREVIOUS_TAG }}
       #     cache-to: type=inline
 
-      - name: view images
+      - name: Docker Image Build
         run: |
           cd go-test
           docker buildx build --load -t manisankardivi/go-test:${{ env.VERSION }} \
