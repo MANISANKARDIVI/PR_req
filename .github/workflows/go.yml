@@ -71,6 +71,7 @@ jobs:
           echo "PREVIOUS_TAG=$PREVIOUS_TAG"
           echo "PREVIOUS_TAG=$PREVIOUS_TAG" >> $GITHUB_ENV
           
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
