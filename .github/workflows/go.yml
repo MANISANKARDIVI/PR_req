@@ -8,6 +8,7 @@ on:
       - .github/workflows/go.yml
       - go-test/**
   pull_request:
+    types: [opened, synchronize, reopened]
     branches:
       - dev
     paths:
@@ -83,10 +84,6 @@ jobs:
         run: |
           cd go-test
           docker push manisankardivi/go-test:${{ env.VERSION }}
-          
-      # - name: Skipping push for non-main branch
-      #   if: github.ref != 'refs/heads/main'
-      #   run: echo "Skipping push for non-main branch."
 
       # - name: Build and push (only on main branch)
       #   run: |
