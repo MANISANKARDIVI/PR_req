@@ -103,56 +103,35 @@ jobs:
       - name: Read version from VERSION file
         run: >
           echo "Listing files in the repository root:"
-
           ls -la
-
           echo "Navigating to go-test directory:"
           
           ls -la
-
           cd go-test
-
           ls -la
-
           VERSION=$(cat VERSION)
-
           echo "Version extracted: $VERSION"
-
           echo "VERSION=$VERSION" >> $GITHUB_ENV  # Save version to environment variable
           
       - name: Checkout Kubernetes repo
         run: >
           echo "Cloning Kubernetes repo..."
-
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
-
           cd k8s_repo/go-k8s
-
           ls -la
-
           echo "Using version: $VERSION"
-
           echo "Updating image version in manifest.yaml..."
-
           sed -i "s|manisankardivi/go-test:.*|manisankardivi/go-test:$VERSION|" manifest.yaml
-
           # sed -i "s|\$VERSION|$VERSION|" manifest.yaml
-
           echo "Image Section after update:"
-
           grep "image: manisankardivi/go-test:*" manifest.yaml
       - name: Check for changes and commit if updated
         run: >
           ls -la
-
           cd k8s_repo/go-k8s
-
           git config --global user.email "manisankardivi@gmail.com"
-
           git config --global user.name "manisankardivi"
-
           git add manifest.yaml
-
           if git diff --cached --exit-code --quiet; then
             echo "No changes detected in manifest.yaml. Skipping commit and branch creation."
             echo "SKIP_BRANCH=true" >> $GITHUB_ENV
@@ -165,13 +144,9 @@ jobs:
         if: env.SKIP_BRANCH == 'false'
         run: >
           cd k8s_repo/go-k8s
-
           git pull origin main --rebase # Ensure the local main is up-to-date with the remote
-
           NEW_BRANCH="release-v$VERSION"
-
           echo "Checking if branch $NEW_BRANCH already exists on the remote..."
-
           if git ls-remote --heads origin "$NEW_BRANCH" | grep "$NEW_BRANCH"; then
             echo "Branch $NEW_BRANCH already exists. Skipping branch creation."
           else
