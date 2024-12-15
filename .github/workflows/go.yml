@@ -8,6 +8,7 @@ on:
       - .github/workflows/go.yml
       - go-test/**
   pull_request:
+    types: [opened, synchronize, reopened]
     branches:
       - dev
     paths:
