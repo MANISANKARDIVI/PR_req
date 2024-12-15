@@ -91,11 +91,11 @@ jobs:
           docker images
 
           
-      # - name: Push image (only push on main branch)
-      #   if: github.ref == 'refs/heads/main'
-      #   run: |
-      #     cd go-test
-      #     docker push manisankardivi/go-test:${{ env.VERSION }}
+      - name: Push image (only push on main branch)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cd go-test
+          docker push manisankardivi/go-test:${{ env.VERSION }}
           
       # - name: Build and push
       #   uses: docker/build-push-action@v6
