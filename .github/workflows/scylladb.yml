@@ -40,15 +40,21 @@ jobs:
       - name: Get previous tag
         id: get_previous_tag
         run: |
-          IMAGE_NAME=manisankardivi/scylladb-test
+          IMAGE_NAME=***/scylladb-test
+          VERSION=${{ env.VERSION }}
           PREVIOUS_TAG=$(curl -s -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" \
             "https://registry.hub.docker.com/v2/repositories/${IMAGE_NAME}/tags?page_size=100" | \
             jq -r '.results[] | "\(.name) \(.last_updated)"' | \
             sort -k2 -r | head -n 1 | awk '{print $1}')
+          
           if [ -z "$PREVIOUS_TAG" ]; then
-            echo "No previous tags found!"
-            exit 1
+            echo "No previous tags found! Proceeding with new tag creation."
+            echo "PREVIOUS_TAG not found, using $VERSION instead."
+            PREVIOUS_TAG=$VERSION
+          else
+            echo "Previous tag found: $PREVIOUS_TAG"
           fi
+      
           echo "PREVIOUS_TAG=$PREVIOUS_TAG"
           echo "PREVIOUS_TAG=$PREVIOUS_TAG" >> $GITHUB_ENV
           
