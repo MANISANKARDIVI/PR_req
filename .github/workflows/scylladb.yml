@@ -62,7 +62,7 @@ jobs:
 
       - name: Docker Image Build
         run: |
-          cd go-test
+          cd scylladb
           docker buildx build --progress=plain --load -t manisankardivi/scylladb-test:${{ env.VERSION }} \
           --cache-to type=registry,ref=manisankardivi/scylladb-test:${{ env.VERSION }} \
           --cache-from type=registry,ref=manisankardivi/scylladb-test:${{ env.PREVIOUS_TAG }} .
@@ -71,7 +71,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           docker images
-          cd go-test
+          cd scylladb-test
           docker push manisankardivi/scylladb-test:${{ env.VERSION }}
                       
   k8s-manifest-files_update:
