@@ -77,7 +77,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           docker images
-          cd scylladb-test
+          cd scylladb
           docker push manisankardivi/scylladb-test:${{ env.VERSION }}
                       
   k8s-manifest-files_update:
@@ -94,7 +94,7 @@ jobs:
           echo "Navigating to go-test directory:"
           
           ls -la
-          cd scylladb-test
+          cd scylladb
           ls -la
           VERSION=$(cat VERSION)
           echo "Version extracted: $VERSION"
@@ -104,7 +104,7 @@ jobs:
         run: |
           echo "Cloning Kubernetes repo..."
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
-          cd k8s_repo/scylladb
+          cd k8s_repo/scylladb-k8s
           ls -la
           echo "Using version: $VERSION"
           echo "Updating image version in manifest.yaml..."
