@@ -24,7 +24,7 @@ jobs:
       - name: Read version from VERSION file
         id: read_version
         run: |
-          VERSION=$(cat go-test/VERSION | xargs)
+          VERSION=$(cat scylladb/VERSION | xargs)
           echo "VERSION=$VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
   
@@ -40,7 +40,7 @@ jobs:
       - name: Get previous tag
         id: get_previous_tag
         run: |
-          IMAGE_NAME=manisankardivi/go-test
+          IMAGE_NAME=manisankardivi/scylladb-test
           PREVIOUS_TAG=$(curl -s -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" \
             "https://registry.hub.docker.com/v2/repositories/${IMAGE_NAME}/tags?page_size=100" | \
             jq -r '.results[] | "\(.name) \(.last_updated)"' | \
@@ -88,7 +88,7 @@ jobs:
           echo "Navigating to go-test directory:"
           
           ls -la
-          cd go-test
+          cd scylladb-test
           ls -la
           VERSION=$(cat VERSION)
           echo "Version extracted: $VERSION"
@@ -98,18 +98,18 @@ jobs:
         run: |
           echo "Cloning Kubernetes repo..."
           git clone https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/MANISANKARDIVI/k8s_repo.git
-          cd k8s_repo/go-k8s
+          cd k8s_repo/scylladb
           ls -la
           echo "Using version: $VERSION"
           echo "Updating image version in manifest.yaml..."
-          sed -i "s|manisankardivi/go-test:.*|manisankardivi/go-test:$VERSION|" manifest.yaml
+          sed -i "s|manisankardivi/scylladb-test:.*|manisankardivi/scylladb-test:$VERSION|" manifest.yaml
           # sed -i "s|\$VERSION|$VERSION|" manifest.yaml
           echo "Image Section after update:"
-          grep "image: manisankardivi/go-test:*" manifest.yaml
+          grep "image: manisankardivi/scylladb-test:*" manifest.yaml
       - name: Check for changes and commit if updated
         run: |
           ls -la
-          cd k8s_repo/go-k8s
+          cd k8s_repo/scylladb-k8s
           git config --global user.email "manisankardivi@gmail.com"
           git config --global user.name "manisankardivi"
           git add manifest.yaml
@@ -124,7 +124,7 @@ jobs:
       - name: Create and push new branch with version (if changes exist)
         if: env.SKIP_BRANCH == 'false'
         run: |
-          cd k8s_repo/go-k8s
+          cd k8s_repo/scylladb-k8s
           git pull origin main --rebase # Ensure the local main is up-to-date with the remote
           NEW_BRANCH="release-v$VERSION"
           echo "Checking if branch $NEW_BRANCH already exists on the remote..."
