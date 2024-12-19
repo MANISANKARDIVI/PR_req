@@ -59,7 +59,7 @@ jobs:
       - name: Get previous tag
         id: get_previous_tag
         run: |
-          IMAGE_NAME=manisankardivi/go-test
+          IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/go-test
           PREVIOUS_TAG=$(curl -s -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" \
             "https://registry.hub.docker.com/v2/repositories/${IMAGE_NAME}/tags?page_size=100" | \
             jq -r '.results[] | "\(.name) \(.last_updated)"' | \
