@@ -56,20 +56,34 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Get previous tag
+      - name: Get previous tag and build image if necessary
         id: get_previous_tag
         run: |
           IMAGE_NAME="go-private"
+          REGISTRY_URL="https://registry.hub.docker.com/v2/repositories/${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME}/tags?page_size=100"
+      
+          # Fetch the previous tag from Docker Hub
           PREVIOUS_TAG=$(curl -s -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" \
-            "https://registry.hub.docker.com/v2/repositories/${{ secrets.DOCKERHUB_USERNAME }}/$IMAGE_NAME/tags?page_size=100" | \
-            jq -r '.results[] | "\(.name) \(.last_updated)"' | \
-            sort -k2 -r | head -n 1 | awk '{print $1}')
+            "$REGISTRY_URL" | jq -r '.results[] | "\(.name) \(.last_updated)"' | sort -k2 -r | head -n 1 | awk '{print $1}')
+          
+          # If no previous tag is found, build the image with the version from VERSION file
           if [ -z "$PREVIOUS_TAG" ]; then
-            echo "No previous tags found!"
-            exit 1
+            echo "No previous tags found, creating a new Image with VERSION tag"
+            echo "${{ env.VERSION }}" > api/VERSION
+            
+            # Here you can add commands to build your Docker image
+            # Example build command (replace it with your actual build process)
+            docker build -t "${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME}:${{ env.VERSION }}" .
+            
+          else
+            echo "PREVIOUS_TAG=$PREVIOUS_TAG"
+            echo "PREVIOUS_TAG=$PREVIOUS_TAG" >> $GITHUB_ENV
           fi
-          echo "PREVIOUS_TAG=$PREVIOUS_TAG"
-          echo "PREVIOUS_TAG=$PREVIOUS_TAG" >> $GITHUB_ENV
+      
+          # Set the new image tag to the VERSION value
+          echo "NEWIMAGE_TAG=${{ env.VERSION }}"
+          echo "NEWIMAGE_TAG=${{ env.VERSION }}" >> $GITHUB_ENV
+
 
   
       # - name: Get previous tag
