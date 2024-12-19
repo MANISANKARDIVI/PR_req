@@ -61,7 +61,7 @@ jobs:
         run: |
           IMAGE_NAME="go-test"
           PREVIOUS_TAG=$(curl -s -u "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" \
-            "https://registry.hub.docker.com/v2/repositories/${{ secrets.DOCKERHUB_USERNAME }}/${{IMAGE_NAME}}/tags?page_size=100" | \
+            "https://registry.hub.docker.com/v2/repositories/${{ secrets.DOCKERHUB_USERNAME }}/$IMAGE_NAME/tags?page_size=100" | \
             jq -r '.results[] | "\(.name) \(.last_updated)"' | \
             sort -k2 -r | head -n 1 | awk '{print $1}')
           if [ -z "$PREVIOUS_TAG" ]; then
