@@ -69,7 +69,7 @@ jobs:
           # If no previous tag is found, build the image with the version from VERSION file
           if [ -z "$PREVIOUS_TAG" ]; then
             echo "No previous tags found, creating a new Image with VERSION tag"
-            echo "${{ env.VERSION }}" > api/VERSION
+            echo "${{ env.VERSION }}" > go-test/VERSION
             
             # Here you can add commands to build your Docker image
             # Example build command (replace it with your actual build process)
